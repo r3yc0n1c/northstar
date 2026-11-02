@@ -1,30 +1,37 @@
-import { BrowserRouter, Route, Routes, Link } from 'react-router-dom';
-import { Toaster, Button } from '@/components/ui';
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { Toaster } from '@/components/ui';
+import { AppShell } from './shell/AppShell';
 import { KitchenSink } from './routes/KitchenSink';
+import { TodayPage } from './pages/TodayPage';
+import { InboxPage } from './pages/InboxPage';
+import { TasksPage } from './pages/TasksPage';
+import { GoalsPage } from './pages/GoalsPage';
+import { ProjectsPage } from './pages/ProjectsPage';
+import { HabitsPage } from './pages/HabitsPage';
+import { ReviewsPage } from './pages/ReviewsPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 export function App() {
   return (
     <BrowserRouter>
       <Toaster />
       <Routes>
+        {/* Dev Kitchen Sink */}
         <Route path="/dev/kitchen-sink" element={<KitchenSink />} />
-        <Route
-          path="*"
-          element={
-            <main className="min-h-screen bg-bg text-text flex flex-col items-center justify-center p-6 text-center space-y-4">
-              <h1 className="text-3xl font-semibold tracking-tight">Northstar</h1>
-              <p className="text-text-2 max-w-md">
-                Personal operating system: life areas → goals → OKRs → projects → tasks → daily
-                planning → habits → reviews.
-              </p>
-              <div className="pt-4">
-                <Link to="/dev/kitchen-sink">
-                  <Button variant="primary">Open Component Kitchen Sink</Button>
-                </Link>
-              </div>
-            </main>
-          }
-        />
+
+        {/* Authenticated App Shell with 7 Destinations + Settings */}
+        <Route element={<AppShell />}>
+          <Route index element={<Navigate to="/today" replace />} />
+          <Route path="today" element={<TodayPage />} />
+          <Route path="inbox" element={<InboxPage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="goals" element={<GoalsPage />} />
+          <Route path="projects" element={<ProjectsPage />} />
+          <Route path="habits" element={<HabitsPage />} />
+          <Route path="reviews" element={<ReviewsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="*" element={<Navigate to="/today" replace />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
