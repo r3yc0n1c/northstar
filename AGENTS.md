@@ -11,7 +11,7 @@ Northstar is a personal operating system: life areas → goals → OKRs → proj
 - Dates: `date-fns` + `@date-fns/tz`; format with `Intl` using profile locale/timezone.
 - Tests: Vitest, Testing Library, Playwright, SQL/pgTAP tests for the database.
 - Hosting: Cloudflare static hosting. No server code in MVP. No Cloudflare Worker until the Calendar phase.
-- Fonts: Plus Jakarta Sans + IBM Plex Mono via `@fontsource-variable/plus-jakarta-sans` and `@fontsource-variable/ibm-plex-mono`. Self-hosted only.
+- Fonts: Plus Jakarta Sans + IBM Plex Mono via `@fontsource-variable/plus-jakarta-sans` and `@fontsource/ibm-plex-mono`. Self-hosted only.
 
 ## Commands (keep these working at all times)
 - `pnpm dev` | `pnpm build` | `pnpm typecheck` | `pnpm lint` | `pnpm format:check`

@@ -415,7 +415,7 @@ Rules: use tokens, never hard-coded hex in components; focus ring is 2px `--high
 ### 7.2 Typography
 
 - **Plus Jakarta Sans** for all UI text. **IBM Plex Mono** for numbers, dates, times, durations, KR values, percentages, streak counts, keyboard hints, and any identifier. Use tabular numerals.
-- Self-host via `@fontsource-variable/plus-jakarta-sans` and `@fontsource-variable/ibm-plex-mono` (no external font requests; simpler CSP).
+- Self-host via `@fontsource-variable/plus-jakarta-sans` and `@fontsource/ibm-plex-mono` (no external font requests; simpler CSP).
 - Scale: 12 / 13 / 14 (body) / 16 / 20 / 24 / 32. Body is 14px, line height 1.5. Page titles 24px semibold. Dense table rows 36px high.
 
 ### 7.3 Layout and components
