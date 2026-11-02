@@ -72,7 +72,7 @@ The CI/CD workflow defined in `.github/workflows/ci.yml` runs on every pull requ
 8. **Dependency audit**: `pnpm audit --prod`
 9. **Secret scanning**: Gitleaks action scans the commit history to ensure zero secrets or service-role keys are committed.
 10. **Deployment to Cloudflare Pages**:
-    - Uses `cloudflare/wrangler-action@v4` running `pages deploy dist --project-name=northstar`.
+    - Uses `cloudflare/wrangler-action@v3` running `pages deploy dist --project-name=northstar`.
     - On PR: Deploys an isolated preview build with a unique URL.
     - On `main` merge: Deploys directly to production.
 
