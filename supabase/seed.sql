@@ -1,0 +1,2 @@
+-- Northstar Local Development Seed Data
+-- Schema migrations define structure; seed data provides local testing fixtures.

@@ -52,7 +52,17 @@ import {
   ProgressBar,
   toast,
 } from '@/components/ui';
-import { Inbox, FolderPlus, MoreVertical, Check, Calendar, Sparkles, Layers } from 'lucide-react';
+import {
+  Inbox,
+  FolderPlus,
+  MoreVertical,
+  Check,
+  Calendar,
+  Sparkles,
+  Layers,
+  Database as DatabaseIcon,
+} from 'lucide-react';
+import { checkSupabaseConnection, type ConnectionHealthResult } from '@/lib/supabase';
 
 export function KitchenSink() {
   const [checkboxChecked, setCheckboxChecked] = React.useState<boolean>(true);
@@ -61,6 +71,11 @@ export function KitchenSink() {
   const [dialogOpen, setDialogOpen] = React.useState<boolean>(false);
   const [sheetOpen, setSheetOpen] = React.useState<boolean>(false);
   const [progressVal, setProgressVal] = React.useState<number>(68);
+  const [dbHealth, setDbHealth] = React.useState<ConnectionHealthResult | null>(null);
+
+  React.useEffect(() => {
+    checkSupabaseConnection().then(setDbHealth);
+  }, []);
 
   return (
     <TooltipProvider>
@@ -86,6 +101,36 @@ export function KitchenSink() {
             </Button>
           }
         />
+
+        {/* Dev Supabase Connectivity */}
+        <section className="space-y-4 rounded-[10px] border border-border bg-surface p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <DatabaseIcon className="h-5 w-5 text-highlight" />
+              <h2 className="text-lg font-semibold text-text">
+                Supabase Wiring & Connectivity (Dev)
+              </h2>
+            </div>
+            {dbHealth && (
+              <Badge variant={dbHealth.ok ? 'success' : 'warning'}>
+                {dbHealth.ok ? 'Connected' : 'Dev Mock / Offline'}
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-text-2">
+            Local development uses typed client in <code>src/lib/supabase.ts</code> with the
+            publishable key only.
+          </p>
+          <div className="p-4 rounded-[6px] bg-surface-2 border border-border flex items-center justify-between text-xs">
+            <span className="text-text-2">
+              Status:{' '}
+              <strong className="text-text">{dbHealth ? dbHealth.message : 'Checking...'}</strong>
+            </span>
+            {dbHealth?.latencyMs !== undefined && (
+              <span className="font-mono-num text-text-2">{dbHealth.latencyMs}ms</span>
+            )}
+          </div>
+        </section>
 
         {/* 1. Typography & Mono Numbers */}
         <section className="space-y-4 rounded-[10px] border border-border bg-surface p-6">
