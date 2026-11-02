@@ -446,6 +446,7 @@ Why: this removes SSR, server session handling, and the Supabase-SSR/React-Route
 | ---------------- | ------------------------------------------------------------------------------ |
 | Language         | TypeScript (strict)                                                            |
 | Build            | Vite, pnpm                                                                     |
+| Lint & format    | Biome                                                                          |
 | UI               | React; React Router (library/data mode, current stable)                        |
 | Styling          | Tailwind CSS 4 with CSS-variable tokens                                        |
 | Components       | shadcn/ui + Radix, Lucide icons                                                |

@@ -1,1 +1,28 @@
+# Dependencies
+node_modules/
+
+# Production build
+dist/
+*.tsbuildinfo
+
+# Environment files (never commit real secrets)
+.env
+.env.local
+.env.*.local
+
+# Supabase local state
+supabase/.branches
+supabase/.temp
+
+# Test results and coverage
+coverage/
+test-results/
+playwright-report/
+
+# Internal Jira planning
 .plan/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.sw?
