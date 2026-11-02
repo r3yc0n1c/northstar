@@ -64,13 +64,9 @@ jobs:
         continue-on-error: false
 
       - name: Deploy to Cloudflare Pages (Preview on PR, Production on main)
-        if: env.CLOUDFLARE_API_TOKEN != '' && (github.event_name == 'push' || github.event_name == 'pull_request')
-        uses: cloudflare/pages-action@v1
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: northstar
-          directory: dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages deploy dist --project-name=northstar
