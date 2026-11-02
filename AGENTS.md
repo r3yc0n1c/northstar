@@ -4,6 +4,7 @@ Northstar is a personal operating system: life areas → goals → OKRs → proj
 
 ## Stack (MVP)
 - Vite + React + TypeScript (strict). pnpm. React Router (library/data mode).
+- Biome for linting and formatting.
 - Tailwind CSS 4 with CSS variables as design tokens. shadcn/ui on Radix. Lucide icons.
 - React Hook Form + Zod. TanStack Query. @dnd-kit for drag and drop. Recharts for the three embedded charts only.
 - Supabase (Auth + Postgres + RLS) via `@supabase/supabase-js`. SQL migrations in `supabase/migrations`. Generated types in `src/lib/database.types.ts`.
