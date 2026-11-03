@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Sun,
   Inbox,
@@ -15,8 +15,10 @@ import {
   Compass,
   Menu,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/features/auth';
 import {
   Button,
   Sheet,
@@ -61,6 +63,13 @@ export function AppShell() {
   const [collapsed, setCollapsed] = React.useState<boolean>(sessionSidebarCollapsed);
   const [moreOpen, setMoreOpen] = React.useState<boolean>(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth/sign-in', { replace: true });
+  };
 
   const toggleSidebar = () => {
     setCollapsed((prev) => {
@@ -235,6 +244,23 @@ export function AppShell() {
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={handleSignOut}
+                      className="w-full h-9 text-text-2 hover:text-danger flex items-center justify-center cursor-pointer"
+                      aria-label="Sign out"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={12}>
+                    Sign out
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={toggleSidebar}
                       className="w-full h-9 text-text-2 hover:text-text flex items-center justify-center"
                       aria-label="Expand sidebar"
@@ -248,22 +274,35 @@ export function AppShell() {
                 </Tooltip>
               </>
             ) : (
-              <NavLink
-                to={SETTINGS_ITEM.path}
-                className={cn(
-                  'flex items-center gap-3 rounded-[6px] px-3 py-2 text-sm font-medium transition-colors min-h-[40px] relative',
-                  location.pathname.startsWith(SETTINGS_ITEM.path)
-                    ? 'bg-surface-2 text-highlight font-semibold'
-                    : 'text-text-2 hover:text-text hover:bg-surface-2/60',
-                )}
-                aria-current={location.pathname.startsWith(SETTINGS_ITEM.path) ? 'page' : undefined}
-              >
-                {location.pathname.startsWith(SETTINGS_ITEM.path) && (
-                  <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-highlight rounded-r" />
-                )}
-                <Settings className="h-4 w-4 shrink-0 text-text-2" />
-                <span className="truncate">{SETTINGS_ITEM.label}</span>
-              </NavLink>
+              <>
+                <NavLink
+                  to={SETTINGS_ITEM.path}
+                  className={cn(
+                    'flex items-center gap-3 rounded-[6px] px-3 py-2 text-sm font-medium transition-colors min-h-[40px] relative',
+                    location.pathname.startsWith(SETTINGS_ITEM.path)
+                      ? 'bg-surface-2 text-highlight font-semibold'
+                      : 'text-text-2 hover:text-text hover:bg-surface-2/60',
+                  )}
+                  aria-current={
+                    location.pathname.startsWith(SETTINGS_ITEM.path) ? 'page' : undefined
+                  }
+                >
+                  {location.pathname.startsWith(SETTINGS_ITEM.path) && (
+                    <span className="absolute left-0 top-1.5 bottom-1.5 w-1 bg-highlight rounded-r" />
+                  )}
+                  <Settings className="h-4 w-4 shrink-0 text-text-2" />
+                  <span className="truncate">{SETTINGS_ITEM.label}</span>
+                </NavLink>
+
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 rounded-[6px] px-3 py-2 text-sm font-medium transition-colors min-h-[40px] text-text-2 hover:text-danger hover:bg-danger/10 cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Sign out</span>
+                </button>
+              </>
             )}
           </div>
         </aside>
@@ -382,7 +421,7 @@ export function AppShell() {
               </div>
 
               {/* Dev link in More menu */}
-              <div className="mt-4 pt-4 border-t border-border">
+              <div className="mt-4 pt-4 border-t border-border flex flex-col gap-2">
                 <NavLink
                   to="/dev/kitchen-sink"
                   onClick={() => setMoreOpen(false)}
@@ -391,6 +430,18 @@ export function AppShell() {
                   <Sparkles className="h-4 w-4" />
                   <span>Component Kitchen Sink (Dev)</span>
                 </NavLink>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMoreOpen(false);
+                    handleSignOut();
+                  }}
+                  className="flex items-center gap-2 text-xs text-text-2 hover:text-danger py-2 cursor-pointer text-left"
+                >
+                  <LogOut className="h-4 w-4 text-danger" />
+                  <span>Sign out</span>
+                </button>
               </div>
             </SheetContent>
           </Sheet>

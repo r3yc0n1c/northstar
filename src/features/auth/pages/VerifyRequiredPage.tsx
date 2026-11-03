@@ -70,7 +70,7 @@ export function VerifyRequiredPage() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/sign-in', { replace: true });
+    navigate('/auth/sign-in', { replace: true });
   };
 
   const emailDisplay = user?.email ?? 'your email address';

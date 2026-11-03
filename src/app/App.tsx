@@ -7,6 +7,7 @@ import {
   ProtectedRoute,
   PublicOnlyRoute,
   SignUpPage,
+  SignInPage,
   VerifyEmailLanding,
   VerifyRequiredPage,
 } from '@/features/auth';
@@ -31,18 +32,18 @@ export function App() {
             {/* Dev Kitchen Sink */}
             <Route path="/dev/kitchen-sink" element={<KitchenSink />} />
 
-            {/* Public-only Auth Routes */}
-            <Route element={<PublicOnlyRoute />}>
-              <Route path="/sign-up" element={<SignUpPage />} />
-              <Route path="/auth/sign-up" element={<SignUpPage />} />
-              {/* Fallback to sign-up until Ticket 15 implements dedicated SignInPage */}
-              <Route path="/sign-in" element={<Navigate to="/sign-up" replace />} />
-              <Route path="/auth/sign-in" element={<Navigate to="/sign-up" replace />} />
-            </Route>
+            {/* Auth Routes Scoped Under /auth */}
+            <Route path="/auth">
+              {/* Public-only Auth */}
+              <Route element={<PublicOnlyRoute />}>
+                <Route path="sign-in" element={<SignInPage />} />
+                <Route path="sign-up" element={<SignUpPage />} />
+              </Route>
 
-            {/* Auth Verification Callbacks & Verification Required */}
-            <Route path="/auth/verify" element={<VerifyEmailLanding />} />
-            <Route path="/auth/verify-required" element={<VerifyRequiredPage />} />
+              {/* Verification Callbacks & Gatekeeper */}
+              <Route path="verify" element={<VerifyEmailLanding />} />
+              <Route path="verify-required" element={<VerifyRequiredPage />} />
+            </Route>
 
             {/* Authenticated & Verified App Shell with 7 Destinations + Settings */}
             <Route element={<ProtectedRoute />}>

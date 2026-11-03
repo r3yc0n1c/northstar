@@ -1,24 +1,48 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
+import type { Session, User } from '@supabase/supabase-js';
+import { AuthProvider } from '@/features/auth';
 import { AppShell } from './AppShell';
+
+function makeMockSession(): Session {
+  const user: User = {
+    id: 'usr_test_shell',
+    app_metadata: {},
+    user_metadata: {},
+    aud: 'authenticated',
+    created_at: new Date().toISOString(),
+    email: 'pilot@northstar.app',
+    email_confirmed_at: '2026-11-03T10:00:00Z',
+  };
+
+  return {
+    access_token: 'fake_access_token',
+    refresh_token: 'fake_refresh_token',
+    expires_in: 3600,
+    token_type: 'bearer',
+    user,
+  };
+}
 
 function renderShell(initialEntry = '/today') {
   return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <Routes>
-        <Route element={<AppShell />}>
-          <Route path="today" element={<div>Today Content</div>} />
-          <Route path="inbox" element={<div>Inbox Content</div>} />
-          <Route path="tasks" element={<div>Tasks Content</div>} />
-          <Route path="goals" element={<div>Goals Content</div>} />
-          <Route path="projects" element={<div>Projects Content</div>} />
-          <Route path="habits" element={<div>Habits Content</div>} />
-          <Route path="reviews" element={<div>Reviews Content</div>} />
-          <Route path="settings" element={<div>Settings Content</div>} />
-        </Route>
-      </Routes>
-    </MemoryRouter>,
+    <AuthProvider initialSession={makeMockSession()} initialLoading={false}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <Routes>
+          <Route element={<AppShell />}>
+            <Route path="today" element={<div>Today Content</div>} />
+            <Route path="inbox" element={<div>Inbox Content</div>} />
+            <Route path="tasks" element={<div>Tasks Content</div>} />
+            <Route path="goals" element={<div>Goals Content</div>} />
+            <Route path="projects" element={<div>Projects Content</div>} />
+            <Route path="habits" element={<div>Habits Content</div>} />
+            <Route path="reviews" element={<div>Reviews Content</div>} />
+            <Route path="settings" element={<div>Settings Content</div>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>
+    </AuthProvider>,
   );
 }
 
@@ -76,5 +100,10 @@ describe('AppShell', () => {
     const fab = screen.getByLabelText('Quick capture');
     expect(fab).toBeInTheDocument();
     fireEvent.click(fab);
+  });
+
+  it('renders sign out button in sidebar footer', () => {
+    renderShell('/today');
+    expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument();
   });
 });

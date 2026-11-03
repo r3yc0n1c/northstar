@@ -148,7 +148,7 @@ export function VerifyEmailLanding() {
             </h1>
             <p className="text-sm text-text-2 mb-6 max-w-[340px]">{errorMessage}</p>
             <div className="w-full space-y-3">
-              <Link to="/sign-up" className="block w-full">
+              <Link to="/auth/sign-up" className="block w-full">
                 <Button variant="secondary" className="w-full">
                   Return to sign up
                 </Button>

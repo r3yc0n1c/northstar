@@ -268,7 +268,7 @@ export function SignUpForm({ onSuccess }: SignUpFormProps) {
         <p className="text-sm text-text-2">
           Already have an account?{' '}
           <Link
-            to="/sign-in"
+            to="/auth/sign-in"
             className="text-highlight hover:text-text transition-colors underline-offset-4 hover:underline font-medium"
           >
             Sign in

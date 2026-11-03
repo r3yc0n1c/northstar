@@ -3,15 +3,13 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App';
 
 describe('App routing and protection', () => {
-  it('redirects unauthenticated visitor away from dashboard to sign-up', async () => {
+  it('redirects unauthenticated visitor away from dashboard to sign-in (FR-AUTH-7)', async () => {
     render(<App />);
 
     // Since user is unauthenticated, private dashboard /today is protected
-    // and user is redirected to /sign-up
+    // and user is redirected to /sign-in
     await waitFor(() => {
-      expect(
-        screen.getByRole('heading', { level: 1, name: /create your account/i }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: /welcome back/i })).toBeInTheDocument();
     });
   });
 });

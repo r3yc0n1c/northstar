@@ -43,12 +43,12 @@ describe('ProtectedRoute', () => {
     expect(screen.queryByText('Dashboard Content')).not.toBeInTheDocument();
   });
 
-  it('redirects unauthenticated user to /sign-in', () => {
+  it('redirects unauthenticated user to /auth/sign-in', () => {
     render(
       <AuthProvider initialSession={null} initialLoading={false}>
         <MemoryRouter initialEntries={['/today']}>
           <Routes>
-            <Route path="/sign-in" element={<div>Sign In Screen</div>} />
+            <Route path="/auth/sign-in" element={<div>Sign In Screen</div>} />
             <Route element={<ProtectedRoute />}>
               <Route path="/today" element={<div>Dashboard Content</div>} />
             </Route>
