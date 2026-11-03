@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Northstar — Tasks Dual-View Architecture (List & Board)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root {
+    --bg-base: #121019;
+    --panel-surface: #1E1B2E;
+    --card-surface: #262238;
+    --card-elevated: #2D2842;
+    --border-token: #40375C;
+    --primary-accent: #5A4F7C;
+    --primary-hover: #6c5f94;
+    --bright-violet: #9D8DF1;
+    --text-primary: #ECE9F6;
+    --text-secondary: #A39FB8;
+    --text-muted: #6F6A87;
+    --danger: #E5767F;
+    --danger-surface: rgba(229, 118, 127, 0.12);
+    --warning: #E8B866;
+    --success: #6FCF97;
+  }
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    margin: 0;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .border-token {
+    border-color: var(--border-token);
+  }
+  .bg-panel {
+    background-color: var(--panel-surface);
+  }
+  .bg-card {
+    background-color: var(--card-surface);
+  }
+  .bg-elevated {
+    background-color: var(--card-elevated);
+  }
+  .text-secondary {
+    color: var(--text-secondary);
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+  .text-violet {
+    color: var(--bright-violet);
+  }
+  /* Custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #121019;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #40375C;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body class="min-h-screen text-[13px] antialiased select-none">
+
+  <!-- Top Canvas Metadata Bar -->
+  <header class="flex items-center justify-between pb-5 mb-5 border-b border-[#40375C]/40 text-xs text-[#A39FB8]">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-[#9D8DF1]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z" />
+        </svg>
+        <span class="font-bold text-[#ECE9F6] tracking-wide text-sm">Northstar OS</span>
+        <span class="font-mono text-[11px] px-1.5 py-0.5 rounded bg-[#1E1B2E] border border-[#40375C]">v2.4.2_TASKS</span>
+      </div>
+      <span class="text-[#6F6A87] font-mono">/</span>
+      <span class="text-[#ECE9F6] font-medium">Dual-Frame Architecture: List View & Kanban Board</span>
+    </div>
+    <div class="flex items-center gap-6 font-mono text-[11px]">
+      <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-[#6FCF97]"></span>Obsidian Engine Synchronized</span>
+      <span class="text-[#6F6A87]">CANVAS: 2x 1440x900 ARCHETYPES</span>
+      <div class="px-2 py-0.5 rounded bg-[#1E1B2E] border border-[#40375C] text-[#ECE9F6]">⌘ + K for Quick Actions</div>
+    </div>
+  </header>
+
+  <!-- Dual Frame Container -->
+  <main class="grid grid-cols-1 xl:grid-cols-2 gap-8 max-w-[3200px] mx-auto">
+
+    <!-- ========================================================================= -->
+    <!-- FRAME 1: LIST VIEW (1440x900 DESKTOP) -->
+    <!-- ========================================================================= -->
+    <div class="flex flex-col bg-[#121019] rounded-xl border border-[#40375C] shadow-2xl overflow-hidden min-h-[920px]">
+      
+      <!-- Frame Meta Header -->
+      <div class="flex items-center justify-between px-4 py-2.5 bg-[#171422] border-b border-[#40375C] text-xs font-mono text-[#A39FB8]">
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#E5767F]/70"></span>
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#E8B866]/70"></span>
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#6FCF97]/70"></span>
+          <span class="ml-2 font-medium text-[#ECE9F6]">northstar-desktop://tasks/list</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="px-2 py-0.5 rounded bg-[#1E1B2E] border border-[#40375C] text-[#9D8DF1]">FRAME 01 // LIST VIEW + MULTI-SELECT</span>
+          <span>1440 × 900</span>
+        </div>
+      </div>
+
+      <!-- App Shell Inner -->
+      <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- Persistent 240px Sidebar -->
+        <aside class="w-[230px] flex-shrink-0 bg-[#1E1B2E] border-r border-[#40375C] flex flex-col justify-between p-3.5 select-none">
+          <div class="space-y-4">
+            <!-- App Brand & Quick Capture -->
+            <div class="flex items-center justify-between pb-1">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#9D8DF1]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z" />
+                </svg>
+                <span class="font-bold text-sm text-[#ECE9F6]">Northstar</span>
+              </div>
+              <span class="font-mono text-[10px] text-[#A39FB8]">v2.4</span>
+            </div>
+
+            <button class="w-full h-8 px-2.5 bg-[#5A4F7C]/40 hover:bg-[#5A4F7C]/60 text-[#ECE9F6] border border-[#5A4F7C] rounded-md flex items-center justify-between text-xs font-medium transition-all shadow-sm">
+              <span class="flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-[#9D8DF1]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Quick Capture
+              </span>
+              <span class="font-mono text-[10px] bg-[#1E1B2E] px-1.5 py-0.5 rounded text-[#A39FB8] border border-[#40375C]">Q</span>
+            </button>
+
+            <!-- Nav Links -->
+            <nav class="space-y-1 text-xs">
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                  Today
+                </span>
+                <span class="font-mono text-[10px] text-[#A39FB8]">6</span>
+              </a>
+
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                  Inbox
+                </span>
+                <span class="font-mono text-[10px] px-1.5 py-0.2 rounded-full bg-[#5A4F7C] text-[#ECE9F6]">4</span>
+              </a>
+
+              <!-- ACTIVE: TASKS -->
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded bg-[#262238] border-l-2 border-[#9D8DF1] text-[#ECE9F6] font-medium">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 text-[#9D8DF1]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                  Tasks
+                </span>
+                <span class="font-mono text-[11px] text-[#9D8DF1] font-semibold">18</span>
+              </a>
+
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                  Goals
+                </span>
+                <span class="font-mono text-[10px] text-[#A39FB8]">3</span>
+              </a>
+
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                  Projects
+                </span>
+                <span class="font-mono text-[10px] text-[#A39FB8]">7</span>
+              </a>
+
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  Habits
+                </span>
+                <span class="font-mono text-[10px] text-[#A39FB8]">5/5</span>
+              </a>
+
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                  Reviews
+                </span>
+                <span class="w-1.5 h-1.5 rounded-full bg-[#9D8DF1]"></span>
+              </a>
+            </nav>
+          </div>
+
+          <!-- Bottom Profile Anchor -->
+          <div class="pt-3 border-t border-[#40375C] flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-full bg-[#5A4F7C] text-[#ECE9F6] flex items-center justify-center font-bold text-xs">
+                AR
+              </div>
+              <div>
+                <p class="text-xs font-semibold text-[#ECE9F6] leading-tight">Alex Rivers</p>
+                <p class="font-mono text-[10px] text-[#A39FB8]">Architect</p>
+              </div>
+            </div>
+            <button class="text-[#A39FB8] hover:text-[#ECE9F6]">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
+          </div>
+        </aside>
+
+        <!-- Main Tasks Workspace (List View) -->
+        <section class="flex-1 flex flex-col bg-[#14121B] overflow-hidden">
+          
+          <!-- Shared Header & View Segmented Controls -->
+          <div class="px-6 pt-5 pb-3 border-b border-[#40375C]/60 bg-[#161421]">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-4">
+                <h1 class="text-xl font-bold text-[#ECE9F6] tracking-tight">Tasks</h1>
+                
+                <!-- Segmented Control [List | Board] -->
+                <div class="flex items-center bg-[#1E1B2E] p-0.5 rounded-lg border border-[#40375C]">
+                  <button class="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md bg-[#5A4F7C] text-[#ECE9F6] shadow">
+                    <svg class="w-3.5 h-3.5 text-[#9D8DF1]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    List
+                  </button>
+                  <button class="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md text-[#A39FB8] hover:text-[#ECE9F6]">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+                    Board
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-2 pl-2 text-xs text-[#A39FB8]">
+                  <span>Group by:</span>
+                  <div class="flex items-center gap-1 px-2 py-0.5 rounded bg-[#1E1B2E] border border-[#40375C] text-[#ECE9F6] cursor-pointer">
+                    <span class="font-medium">Status</span>
+                    <svg class="w-3 h-3 text-[#A39FB8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Primary Action: New Task -->
+              <div class="flex items-center gap-3">
+                <button class="h-8 px-3.5 rounded-md bg-[#5A4F7C] hover:bg-[#6c5f94] text-[#ECE9F6] font-medium text-xs flex items-center gap-1.5 shadow transition-all border border-[#9D8DF1]/30">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                  New task
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Bar as Chips with Dropdowns & Search -->
+            <div class="flex items-center justify-between gap-3 pt-1">
+              <div class="flex items-center gap-2 flex-wrap text-xs">
+                <!-- Status Filter -->
+                <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] text-[#ECE9F6] transition-colors">
+                  <span class="text-[#A39FB8]">Status:</span>
+                  <span class="font-medium">All active</span>
+                  <svg class="w-3 h-3 text-[#A39FB8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <!-- Priority Filter -->
+                <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] text-[#ECE9F6] transition-colors">
+                  <span class="text-[#A39FB8]">Priority:</span>
+                  <span class="font-medium text-[#9D8DF1]">P1, P2</span>
+                  <svg class="w-3 h-3 text-[#A39FB8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <!-- Label Filter -->
+                <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] text-[#A39FB8] hover:text-[#ECE9F6] transition-colors">
+                  <span>Label</span>
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <!-- Project Filter -->
+                <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] text-[#ECE9F6] transition-colors">
+                  <span class="text-[#A39FB8]">Project:</span>
+                  <span class="font-medium">Core Engine</span>
+                  <svg class="w-3 h-3 text-[#A39FB8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <!-- Due Filter -->
+                <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] text-[#A39FB8] hover:text-[#ECE9F6] transition-colors">
+                  <span>Due date</span>
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <!-- Clear Filters Ghost -->
+                <button class="px-2 py-1 text-[11px] text-[#A39FB8] hover:text-[#9D8DF1] underline underline-offset-2">Reset</button>
+              </div>
+
+              <!-- Search Within List -->
+              <div class="relative w-64">
+                <input type="text" placeholder="Filter tasks or #label…" value="telemetry" class="w-full h-8 pl-7 pr-3 bg-[#1E1B2E] border border-[#40375C] rounded-md text-xs text-[#ECE9F6] placeholder-[#6F6A87] focus:outline-none focus:border-[#9D8DF1] focus:ring-1 focus:ring-[#9D8DF1]">
+                <svg class="w-3.5 h-3.5 text-[#A39FB8] absolute left-2 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table Header / Column Spec -->
+          <div class="grid grid-cols-12 px-6 py-2 bg-[#121019] border-b border-[#40375C]/40 text-[11px] font-mono text-[#A39FB8] uppercase tracking-wider items-center">
+            <div class="col-span-5 flex items-center gap-3">
+              <input type="checkbox" class="w-3.5 h-3.5 rounded bg-[#1E1B2E] border-[#40375C] accent-[#9D8DF1]">
+              <span>Task Title</span>
+            </div>
+            <div class="col-span-2">Project</div>
+            <div class="col-span-1">Priority</div>
+            <div class="col-span-1">Planned</div>
+            <div class="col-span-1">Due Date</div>
+            <div class="col-span-1">Est.</div>
+            <div class="col-span-1 text-right">Labels</div>
+          </div>
+
+          <!-- Tasks List Content with Grouping -->
+          <div class="flex-1 overflow-y-auto px-6 py-3 space-y-4 pb-28">
+
+            <!-- GROUP 1: IN PROGRESS (Collapsed header showing count) -->
+            <div>
+              <div class="flex items-center justify-between py-1.5 text-xs text-[#ECE9F6] cursor-pointer group">
+                <div class="flex items-center gap-2">
+                  <svg class="w-3 h-3 text-[#9D8DF1] transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                  <span class="font-semibold tracking-wide">In Progress</span>
+                  <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-[#1E1B2E] border border-[#40375C] text-[#9D8DF1]">3</span>
+                </div>
+                <div class="h-[1px] flex-1 mx-3 bg-[#40375C]/30"></div>
+                <span class="text-[11px] text-[#A39FB8] font-mono">1h 45m left</span>
+              </div>
+
+              <!-- Row 1 (MULTI-SELECTED STATE 1) -->
+              <div class="grid grid-cols-12 px-3 py-2.5 my-1 rounded-lg bg-[#2D2842] border border-[#9D8DF1]/80 shadow-md items-center text-xs transition-all">
+                <div class="col-span-5 flex items-center gap-3">
+                  <input type="checkbox" checked class="w-3.5 h-3.5 rounded bg-[#5A4F7C] border-[#9D8DF1] accent-[#9D8DF1] cursor-pointer">
+                  <div class="flex items-center gap-2 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#9D8DF1]"></span>
+                    <span class="font-medium text-[#ECE9F6] truncate">Finalize telemetry payload compression protocol</span>
+                  </div>
+                </div>
+                <div class="col-span-2">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#1E1B2E] border border-[#40375C] text-[11px] text-[#A39FB8]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#5A4F7C]"></span> Core Engine
+                  </span>
+                </div>
+                <div class="col-span-1">
+                  <span class="px-1.5 py-0.5 rounded bg-[#E5767F]/20 text-[#E5767F] font-mono text-[10px] font-semibold border border-[#E5767F]/30">P1 Urgent</span>
+                </div>
+                <div class="col-span-1 font-mono text-[11px] text-[#ECE9F6]">Today</div>
+                <div class="col-span-1 font-mono text-[11px] text-[#ECE9F6]">Tomorrow</div>
+                <div class="col-span-1 font-mono text-[11px] text-[#A39FB8]">45m</div>
+                <div class="col-span-1 flex justify-end gap-1">
+                  <span class="px-1.5 py-0.5 rounded bg-[#1E1B2E] text-[10px] text-[#9D8DF1] border border-[#40375C]">#api</span>
+                </div>
+              </div>
+
+              <!-- Row 2 (MULTI-SELECTED STATE 2) -->
+              <div class="grid grid-cols-12 px-3 py-2.5 my-1 rounded-lg bg-[#2D2842] border border-[#9D8DF1]/80 shadow-md items-center text-xs transition-all">
+                <div class="col-span-5 flex items-center gap-3">
+                  <input type="checkbox" checked class="w-3.5 h-3.5 rounded bg-[#5A4F7C] border-[#9D8DF1] accent-[#9D8DF1] cursor-pointer">
+                  <div class="flex items-center gap-2 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#9D8DF1]"></span>
+                    <span class="font-medium text-[#ECE9F6] truncate">Implement zero-latency ingest buffer for metrics</span>
+                  </div>
+                </div>
+                <div class="col-span-2">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#1E1B2E] border border-[#40375C] text-[11px] text-[#A39FB8]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#5A4F7C]"></span> Core Engine
+                  </span>
+                </div>
+                <div class="col-span-1">
+                  <span class="px-1.5 py-0.5 rounded bg-[#9D8DF1]/20 text-[#9D8DF1] font-mono text-[10px] font-semibold border border-[#9D8DF1]/30">P2 High</span>
+                </div>
+                <div class="col-span-1 font-mono text-[11px] text-[#ECE9F6]">Today</div>
+                <div class="col-span-1 font-mono text-[11px] text-[#ECE9F6]">3 Nov</div>
+                <div class="col-span-1 font-mono text-[11px] text-[#A39FB8]">1h 00m</div>
+                <div class="col-span-1 flex justify-end gap-1">
+                  <span class="px-1.5 py-0.5 rounded bg-[#1E1B2E] text-[10px] text-[#9D8DF1] border border-[#40375C]">#infra</span>
+                </div>
+              </div>
+
+              <!-- Row 3 (OVERDUE STATE with Danger styling & icon) -->
+              <div class="grid grid-cols-12 px-3 py-2.5 my-1 rounded-lg bg-[#1E1B2E]/70 hover:bg-[#1E1B2E] border border-[#40375C] items-center text-xs transition-colors">
+                <div class="col-span-5 flex items-center gap-3">
+                  <input type="checkbox" class="w-3.5 h-3.5 rounded bg-[#14121B] border-[#40375C] accent-[#9D8DF1]">
+                  <div class="flex items-center gap-2 truncate">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#E5767F]"></span>
+                    <span class="text-[#ECE9F6] truncate">Security review for OpenID telemetry claims</span>
+                  </div>
+                </div>
+                <div class="col-span-2">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#14121B] border border-[#40375C] text-[11px] text-[#A39FB8]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#6FCF97]"></span> Security
+                  </span>
+                </div>
+                <div class="col-span-1">
+                  <span class="px-1.5 py-0.5 rounded bg-[#E5767F]/20 text-[#E5767F] font-mono text-[10px] font-semibold border border-[#E5767F]/30">P1 Urgent</span>
+                </div>
+                <div class="col-span-1 font-mono text-[11px] text-[#A39FB8]">28 Oct</div>
+                <div class="col-span-1">
+                  <span class="inline-flex items-center gap-1 font-mono text-[11px] text-[#E5767F] font-semibold">
+                    <svg class="w-3 h-3 text-[#E5767F]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Yesterday
+                  </span>
+                </div>
+                <div class="col-span-1 font-mono text-[11px] text-[#A39FB8]">30m</div>
+                <div class="col-span-1 flex justify-end gap-1">
+                  <span class="px-1.5 py-0.5 rounded bg-[#14121B] text-[10px] text-[#A39FB8] border border-[#40375C]">#audit</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- GROUP 2: TODO (Collapsible Group) -->
+            <div class="pt-2">
+              <div class="flex items-center justify-between py-1.5 text-xs text-[#ECE9F6] cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <svg class="w-3 h-3 text-[#A39FB8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                  <span class="font-semibold tracking-wide">Todo</span>
+                  <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-[#1E1B2E] border border-[#40375C] text-[#A39FB8]">4</span>
+                </div>
+                <div class="h-[1px] flex-1 mx-3 bg-[#40375C]/30"></div>
+                <span class="text-[11px] text-[#A39FB8] font-mono">3h 15m planned</span>
+              </div>
+
+              <!-- Row 4 -->
+              <div class="grid grid-cols-12 px-3 py-2.5 my-1 rounded-lg bg-[#1E1B2E]/60 hover:bg-[#1E1B2E] border border-[#40375C] items-center text-xs transition-colors">
+                <div class="col-span-5 flex items-center gap-3">
+                  <input type="checkbox" class="w-3.5 h-3.5 rounded bg-[#14121B] border-[#40375C]">
+                  <span class="text-[#ECE9F6] truncate">Draft architecture telemetry RFC v2</span>
+                </div>
+                <div class="col-span-2">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#14121B] border border-[#40375C] text-[11px] text-[#A39FB8]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#E8B866]"></span> Strategy
+                  </span>
+                </div>
+                <div class="col-span-1">
+                  <span class="px-1.5 py-0.5 rounded bg-[#A39FB8]/20 text-[#A39FB8] font-mono text-[10px] border border-[#40375C]">P3 Med</span>
+                </div>
+                <div class="col-span-1 font-mono text-[11px] text-[#A39FB8]">4 Nov</div>
+                <div class="col-span-1 font-mono text-[11px] text-[#A39FB8]">6 Nov</div>
+                <div class="col-span-1 font-mono text-[11px] text-[#A39FB8]">2h 00m</div>
+                <div class="col-span-1 flex justify-end gap-1">
+                  <span class="px-1.5 py-0.5 rounded bg-[#14121B] text-[10px] text-[#A39FB8] border border-[#40375C]">#docs</span>
+                </div>
+              </div>
+
+              <!-- Row 5 -->
+              <div class="grid grid-cols-12 px-3 py-2.5 my-1 rounded-lg bg-[#1E1B2E]/60 hover:bg-[#1E1B2E] border border-[#40375C] items-center text-xs transition-colors">
+                <div class="col-span-5 flex items-center gap-3">
+                  <input type="checkbox" class="w-3.5 h-3.5 rounded bg-[#14121B] border-[#40375C]">
+                  <span class="text-[#ECE9F6] truncate">Calibrate load tests on telemetry replica set</span>
+                </div>
+                <div class="col-span-2">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#14121B] border border-[#40375C] text-[11px] text-[#A39FB8]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#5A4F7C]"></span> Core Engine
+                  </span>
+                </div>
+                <div class="col-span-1">
+                  <span class="px-1.5 py-0.5 rounded bg-[#9D8DF1]/20 text-[#9D8DF1] font-mono text-[10px] font-semibold border border-[#9D8DF1]/30">P2 High</span>
+                </div>
+                <div class="col-span-1 font-mono text-[11px] text-[#A39FB8]">5 Nov</div>
+                <div class="col-span-1 font-mono text-[11px] text-[#A39FB8]">7 Nov</div>
+                <div class="col-span-1 font-mono text-[11px] text-[#A39FB8]">45m</div>
+                <div class="col-span-1 flex justify-end gap-1">
+                  <span class="px-1.5 py-0.5 rounded bg-[#14121B] text-[10px] text-[#A39FB8] border border-[#40375C]">#perf</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- GROUP 3: DONE (Completed items sample) -->
+            <div class="pt-2">
+              <div class="flex items-center justify-between py-1.5 text-xs text-[#6F6A87] cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <svg class="w-3 h-3 text-[#6F6A87]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                  <span class="font-semibold tracking-wide">Done</span>
+                  <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-[#1E1B2E] border border-[#40375C]/60 text-[#6F6A87]">11</span>
+                </div>
+                <div class="h-[1px] flex-1 mx-3 bg-[#40375C]/20"></div>
+                <span class="text-[11px] text-[#6F6A87] font-mono">100% completed</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- FLOATING MULTI-SELECT BULK ACTION BAR & TOAST NOTIFICATION -->
+          <div class="absolute bottom-4 left-[246px] right-6 flex items-center justify-between pointer-events-none z-20">
+            
+            <!-- Floating Bulk Action Bar -->
+            <div class="pointer-events-auto bg-[#1E1B2E] border border-[#9D8DF1] shadow-2xl rounded-xl px-4 py-2.5 flex items-center gap-3 text-xs">
+              <div class="flex items-center gap-2 pr-3 border-r border-[#40375C]">
+                <span class="w-2 h-2 rounded-full bg-[#9D8DF1] animate-pulse"></span>
+                <span class="font-mono font-semibold text-[#ECE9F6]">2 selected</span>
+              </div>
+
+              <!-- Quick Bulk Buttons -->
+              <button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#262238] hover:bg-[#342e4e] text-[#ECE9F6] border border-[#40375C] transition-colors">
+                <svg class="w-3 h-3 text-[#A39FB8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Set status
+              </button>
+
+              <button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#262238] hover:bg-[#342e4e] text-[#ECE9F6] border border-[#40375C] transition-colors">
+                <svg class="w-3 h-3 text-[#A39FB8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Set priority
+              </button>
+
+              <button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#262238] hover:bg-[#342e4e] text-[#ECE9F6] border border-[#40375C] transition-colors">
+                <svg class="w-3 h-3 text-[#A39FB8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                Add label
+              </button>
+
+              <button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#262238] hover:bg-[#342e4e] text-[#ECE9F6] border border-[#40375C] transition-colors">
+                <svg class="w-3 h-3 text-[#A39FB8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Move date
+              </button>
+
+              <button class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#E5767F]/20 hover:bg-[#E5767F]/30 text-[#E5767F] border border-[#E5767F]/40 transition-colors">
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                Delete
+              </button>
+            </div>
+
+            <!-- Transient Toast Nearby -->
+            <div class="pointer-events-auto bg-[#1E1B2E] border border-[#40375C] shadow-xl rounded-lg px-3.5 py-2 flex items-center gap-3 text-xs">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#6FCF97]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span class="text-[#ECE9F6]">Deleted 2 tasks.</span>
+              </div>
+              <button class="font-mono text-xs font-semibold text-[#9D8DF1] hover:underline underline-offset-2">Undo</button>
+            </div>
+
+          </div>
+
+        </section>
+      </div>
+
+      <!-- Frame Technical Footer Spec -->
+      <footer class="px-4 py-2 bg-[#171422] border-t border-[#40375C] flex items-center justify-between text-[11px] font-mono text-[#A39FB8]">
+        <div class="flex items-center gap-3">
+          <span class="text-[#6FCF97]">● SELECTION ACTIVE (2 ROWS)</span>
+          <span>•</span>
+          <span>KEYBOARD: J/K NAV, SPACE SELECT, SHIFT+D DELETE</span>
+        </div>
+        <div>SPEC: SYS-TSK-LIST.01</div>
+      </footer>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- FRAME 2: KANBAN BOARD VIEW (1440x900 DESKTOP) -->
+    <!-- ========================================================================= -->
+    <div class="flex flex-col bg-[#121019] rounded-xl border border-[#40375C] shadow-2xl overflow-hidden min-h-[920px]">
+      
+      <!-- Frame Meta Header -->
+      <div class="flex items-center justify-between px-4 py-2.5 bg-[#171422] border-b border-[#40375C] text-xs font-mono text-[#A39FB8]">
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#E5767F]/70"></span>
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#E8B866]/70"></span>
+          <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#6FCF97]/70"></span>
+          <span class="ml-2 font-medium text-[#ECE9F6]">northstar-desktop://tasks/board</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="px-2 py-0.5 rounded bg-[#1E1B2E] border border-[#40375C] text-[#9D8DF1]">FRAME 02 // KANBAN BOARD + DRAG STATE</span>
+          <span>1440 × 900</span>
+        </div>
+      </div>
+
+      <!-- App Shell Inner -->
+      <div class="flex flex-1 overflow-hidden relative">
+        
+        <!-- Persistent 240px Sidebar -->
+        <aside class="w-[230px] flex-shrink-0 bg-[#1E1B2E] border-r border-[#40375C] flex flex-col justify-between p-3.5 select-none">
+          <div class="space-y-4">
+            <!-- App Brand & Quick Capture -->
+            <div class="flex items-center justify-between pb-1">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#9D8DF1]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z" />
+                </svg>
+                <span class="font-bold text-sm text-[#ECE9F6]">Northstar</span>
+              </div>
+              <span class="font-mono text-[10px] text-[#A39FB8]">v2.4</span>
+            </div>
+
+            <button class="w-full h-8 px-2.5 bg-[#5A4F7C]/40 hover:bg-[#5A4F7C]/60 text-[#ECE9F6] border border-[#5A4F7C] rounded-md flex items-center justify-between text-xs font-medium transition-all shadow-sm">
+              <span class="flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-[#9D8DF1]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Quick Capture
+              </span>
+              <span class="font-mono text-[10px] bg-[#1E1B2E] px-1.5 py-0.5 rounded text-[#A39FB8] border border-[#40375C]">Q</span>
+            </button>
+
+            <!-- Nav Links -->
+            <nav class="space-y-1 text-xs">
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                  Today
+                </span>
+                <span class="font-mono text-[10px] text-[#A39FB8]">6</span>
+              </a>
+
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+                  Inbox
+                </span>
+                <span class="font-mono text-[10px] px-1.5 py-0.2 rounded-full bg-[#5A4F7C] text-[#ECE9F6]">4</span>
+              </a>
+
+              <!-- ACTIVE: TASKS -->
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded bg-[#262238] border-l-2 border-[#9D8DF1] text-[#ECE9F6] font-medium">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4 text-[#9D8DF1]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                  Tasks
+                </span>
+                <span class="font-mono text-[11px] text-[#9D8DF1] font-semibold">18</span>
+              </a>
+
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+                  Goals
+                </span>
+                <span class="font-mono text-[10px] text-[#A39FB8]">3</span>
+              </a>
+
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                  Projects
+                </span>
+                <span class="font-mono text-[10px] text-[#A39FB8]">7</span>
+              </a>
+
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  Habits
+                </span>
+                <span class="font-mono text-[10px] text-[#A39FB8]">5/5</span>
+              </a>
+
+              <a href="#" class="flex items-center justify-between px-2.5 py-2 rounded text-[#A39FB8] hover:text-[#ECE9F6] hover:bg-[#262238]/60 transition-colors">
+                <span class="flex items-center gap-2.5">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                  Reviews
+                </span>
+                <span class="w-1.5 h-1.5 rounded-full bg-[#9D8DF1]"></span>
+              </a>
+            </nav>
+          </div>
+
+          <!-- Bottom Profile Anchor -->
+          <div class="pt-3 border-t border-[#40375C] flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-full bg-[#5A4F7C] text-[#ECE9F6] flex items-center justify-center font-bold text-xs">
+                AR
+              </div>
+              <div>
+                <p class="text-xs font-semibold text-[#ECE9F6] leading-tight">Alex Rivers</p>
+                <p class="font-mono text-[10px] text-[#A39FB8]">Architect</p>
+              </div>
+            </div>
+            <button class="text-[#A39FB8] hover:text-[#ECE9F6]">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </button>
+          </div>
+        </aside>
+
+        <!-- Main Tasks Workspace (Board View) -->
+        <section class="flex-1 flex flex-col bg-[#14121B] overflow-hidden">
+          
+          <!-- Shared Header & View Segmented Controls -->
+          <div class="px-6 pt-5 pb-3 border-b border-[#40375C]/60 bg-[#161421]">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-4">
+                <h1 class="text-xl font-bold text-[#ECE9F6] tracking-tight">Tasks</h1>
+                
+                <!-- Segmented Control [List | Board] (BOARD ACTIVE) -->
+                <div class="flex items-center bg-[#1E1B2E] p-0.5 rounded-lg border border-[#40375C]">
+                  <button class="flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md text-[#A39FB8] hover:text-[#ECE9F6]">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    List
+                  </button>
+                  <button class="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md bg-[#5A4F7C] text-[#ECE9F6] shadow">
+                    <svg class="w-3.5 h-3.5 text-[#9D8DF1]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+                    Board
+                  </button>
+                </div>
+
+                <div class="flex items-center gap-2 pl-2 text-xs text-[#A39FB8]">
+                  <span>Columns:</span>
+                  <span class="font-mono text-[#9D8DF1] bg-[#1E1B2E] px-2 py-0.5 rounded border border-[#40375C]">Status Workflow</span>
+                </div>
+              </div>
+
+              <!-- Primary Action: New Task -->
+              <div class="flex items-center gap-3">
+                <button class="h-8 px-3.5 rounded-md bg-[#5A4F7C] hover:bg-[#6c5f94] text-[#ECE9F6] font-medium text-xs flex items-center gap-1.5 shadow transition-all border border-[#9D8DF1]/30">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                  New task
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Bar as Chips with Dropdowns & Search -->
+            <div class="flex items-center justify-between gap-3 pt-1">
+              <div class="flex items-center gap-2 flex-wrap text-xs">
+                <!-- Status Filter -->
+                <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] text-[#ECE9F6] transition-colors">
+                  <span class="text-[#A39FB8]">Status:</span>
+                  <span class="font-medium">All columns</span>
+                  <svg class="w-3 h-3 text-[#A39FB8]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <!-- Priority Filter -->
+                <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] text-[#A39FB8] hover:text-[#ECE9F6] transition-colors">
+                  <span>Priority</span>
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <!-- Label Filter -->
+                <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] text-[#A39FB8] hover:text-[#ECE9F6] transition-colors">
+                  <span>Label</span>
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <!-- Project Filter -->
+                <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] text-[#A39FB8] hover:text-[#ECE9F6] transition-colors">
+                  <span>Project</span>
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <!-- Due Filter -->
+                <button class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] text-[#A39FB8] hover:text-[#ECE9F6] transition-colors">
+                  <span>Due date</span>
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+              </div>
+
+              <!-- Search Within List -->
+              <div class="relative w-56">
+                <input type="text" placeholder="Search board…" class="w-full h-8 pl-7 pr-3 bg-[#1E1B2E] border border-[#40375C] rounded-md text-xs text-[#ECE9F6] placeholder-[#6F6A87] focus:outline-none focus:border-[#9D8DF1]">
+                <svg class="w-3.5 h-3.5 text-[#A39FB8] absolute left-2 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- KANBAN BOARD 4-COLUMN WORKSPACE -->
+          <div class="flex-1 overflow-x-auto p-5 grid grid-cols-4 gap-4">
+            
+            <!-- COLUMN 1: TODO -->
+            <div class="flex flex-col bg-[#171422] rounded-xl border border-[#40375C]/70 overflow-hidden">
+              <!-- Column Header -->
+              <div class="px-3.5 py-3 border-b border-[#40375C]/50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-[#A39FB8]"></span>
+                  <h3 class="font-semibold text-xs text-[#ECE9F6] uppercase tracking-wide">Todo</h3>
+                  <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-[#1E1B2E] border border-[#40375C] text-[#A39FB8]">4</span>
+                </div>
+                <button class="text-[#A39FB8] hover:text-[#ECE9F6]">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                </button>
+              </div>
+
+              <!-- Column Cards Container -->
+              <div class="flex-1 p-2.5 space-y-2.5 overflow-y-auto">
+                <!-- Card 1 -->
+                <div class="bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] rounded-lg p-3 space-y-2.5 transition-all shadow-sm cursor-grab">
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="text-xs font-medium text-[#ECE9F6] leading-snug">Draft architecture telemetry RFC v2</h4>
+                    <span class="px-1.5 py-0.5 rounded bg-[#A39FB8]/20 text-[#A39FB8] font-mono text-[10px]">P3</span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap text-[11px]">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#121019] text-[#A39FB8] border border-[#40375C]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#E8B866]"></span> Strategy
+                    </span>
+                    <span class="font-mono text-[#A39FB8]">6 Nov</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-[#40375C]/40 text-[11px] text-[#A39FB8]">
+                    <span class="font-mono">2h 00m</span>
+                    <span class="font-mono text-[#9D8DF1]">0/4 subtasks</span>
+                  </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] rounded-lg p-3 space-y-2.5 transition-all shadow-sm cursor-grab">
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="text-xs font-medium text-[#ECE9F6] leading-snug">Calibrate load tests on replica set</h4>
+                    <span class="px-1.5 py-0.5 rounded bg-[#9D8DF1]/20 text-[#9D8DF1] font-mono text-[10px] font-semibold">P2</span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap text-[11px]">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#121019] text-[#A39FB8] border border-[#40375C]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#5A4F7C]"></span> Core Engine
+                    </span>
+                    <span class="font-mono text-[#A39FB8]">7 Nov</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-[#40375C]/40 text-[11px] text-[#A39FB8]">
+                    <span class="font-mono">45m</span>
+                    <span class="font-mono text-[#9D8DF1]">1/3</span>
+                  </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] rounded-lg p-3 space-y-2.5 transition-all shadow-sm cursor-grab">
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="text-xs font-medium text-[#ECE9F6] leading-snug">Automate daily telemetry summary digest</h4>
+                    <span class="px-1.5 py-0.5 rounded bg-[#A39FB8]/20 text-[#A39FB8] font-mono text-[10px]">P3</span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap text-[11px]">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#121019] text-[#A39FB8] border border-[#40375C]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#5A4F7C]"></span> Core Engine
+                    </span>
+                    <span class="font-mono text-[#A39FB8]">10 Nov</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-[#40375C]/40 text-[11px] text-[#A39FB8]">
+                    <span class="font-mono">1h 15m</span>
+                    <span class="font-mono text-[#A39FB8]">0/2</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add Task Ghost Button -->
+              <div class="p-2 border-t border-[#40375C]/40 bg-[#171422]">
+                <button class="w-full py-1.5 rounded-md hover:bg-[#1E1B2E] text-xs text-[#A39FB8] hover:text-[#ECE9F6] flex items-center justify-center gap-1.5 transition-colors">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  Add task
+                </button>
+              </div>
+            </div>
+
+
+            <!-- COLUMN 2: IN PROGRESS (With card mid-drag state + drop placeholder) -->
+            <div class="flex flex-col bg-[#171422] rounded-xl border border-[#40375C]/70 overflow-hidden relative">
+              <!-- Column Header -->
+              <div class="px-3.5 py-3 border-b border-[#40375C]/50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-[#9D8DF1]"></span>
+                  <h3 class="font-semibold text-xs text-[#ECE9F6] uppercase tracking-wide">In Progress</h3>
+                  <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-[#1E1B2E] border border-[#40375C] text-[#9D8DF1]">2</span>
+                </div>
+                <button class="text-[#A39FB8] hover:text-[#ECE9F6]">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                </button>
+              </div>
+
+              <!-- Column Cards Container -->
+              <div class="flex-1 p-2.5 space-y-2.5 overflow-y-auto relative">
+                
+                <!-- Card 1 in column -->
+                <div class="bg-[#1E1B2E] hover:bg-[#262238] border border-[#40375C] rounded-lg p-3 space-y-2.5 transition-all shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="text-xs font-medium text-[#ECE9F6] leading-snug">Implement zero-latency ingest buffer</h4>
+                    <span class="px-1.5 py-0.5 rounded bg-[#9D8DF1]/20 text-[#9D8DF1] font-mono text-[10px] font-semibold">P2</span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap text-[11px]">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#121019] text-[#A39FB8] border border-[#40375C]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#5A4F7C]"></span> Core Engine
+                    </span>
+                    <span class="font-mono text-[#ECE9F6]">Tomorrow</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-[#40375C]/40 text-[11px] text-[#A39FB8]">
+                    <span class="font-mono">1h 00m</span>
+                    <span class="font-mono text-[#9D8DF1]">2/5</span>
+                  </div>
+                </div>
+
+                <!-- DROP PLACEHOLDER (Dashed drop zone indicator) -->
+                <div class="h-28 rounded-lg border-2 border-dashed border-[#9D8DF1]/60 bg-[#9D8DF1]/5 flex flex-col items-center justify-center text-center p-3">
+                  <div class="w-6 h-6 rounded-full bg-[#9D8DF1]/20 flex items-center justify-center text-[#9D8DF1] mb-1">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                  </div>
+                  <span class="text-[11px] font-mono text-[#9D8DF1] font-medium">Drop card to update status</span>
+                </div>
+
+                <!-- CARD MID-DRAG (Elevated with #9D8DF1 outline, tilted shadow & drag cursor) -->
+                <div class="bg-[#262238] border-2 border-[#9D8DF1] rounded-lg p-3 space-y-2.5 shadow-[0_12px_24px_rgba(0,0,0,0.6)] transform rotate-2 translate-x-2 -translate-y-1 cursor-grabbing z-30 ring-4 ring-[#9D8DF1]/20">
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="text-xs font-semibold text-[#ECE9F6] leading-snug">Finalize telemetry payload compression protocol</h4>
+                    <span class="px-1.5 py-0.5 rounded bg-[#E5767F]/20 text-[#E5767F] font-mono text-[10px] font-semibold border border-[#E5767F]/40">P1</span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap text-[11px]">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#1E1B2E] text-[#ECE9F6] border border-[#40375C]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#5A4F7C]"></span> Core Engine
+                    </span>
+                    <span class="font-mono text-[#ECE9F6] font-medium">Today</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-[#40375C] text-[11px] text-[#A39FB8]">
+                    <span class="font-mono text-[#ECE9F6]">45m</span>
+                    <span class="font-mono font-semibold text-[#9D8DF1]">2/5</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Add Task Ghost Button -->
+              <div class="p-2 border-t border-[#40375C]/40 bg-[#171422]">
+                <button class="w-full py-1.5 rounded-md hover:bg-[#1E1B2E] text-xs text-[#A39FB8] hover:text-[#ECE9F6] flex items-center justify-center gap-1.5 transition-colors">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  Add task
+                </button>
+              </div>
+            </div>
+
+
+            <!-- COLUMN 3: BLOCKED -->
+            <div class="flex flex-col bg-[#171422] rounded-xl border border-[#40375C]/70 overflow-hidden">
+              <!-- Column Header -->
+              <div class="px-3.5 py-3 border-b border-[#40375C]/50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-[#E5767F]"></span>
+                  <h3 class="font-semibold text-xs text-[#ECE9F6] uppercase tracking-wide">Blocked</h3>
+                  <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-[#1E1B2E] border border-[#40375C] text-[#E5767F]">1</span>
+                </div>
+                <button class="text-[#A39FB8] hover:text-[#ECE9F6]">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                </button>
+              </div>
+
+              <!-- Column Cards Container -->
+              <div class="flex-1 p-2.5 space-y-2.5 overflow-y-auto">
+                <!-- Card 1 (Blocked with alert tag) -->
+                <div class="bg-[#1E1B2E] hover:bg-[#262238] border border-[#E5767F]/40 rounded-lg p-3 space-y-2.5 transition-all shadow-sm">
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="text-xs font-medium text-[#ECE9F6] leading-snug">Security review for OpenID telemetry claims</h4>
+                    <span class="px-1.5 py-0.5 rounded bg-[#E5767F]/20 text-[#E5767F] font-mono text-[10px] font-semibold">P1</span>
+                  </div>
+                  <div class="p-1.5 rounded bg-[#E5767F]/10 border border-[#E5767F]/20 text-[10px] text-[#E5767F] flex items-center gap-1.5">
+                    <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Awaiting SecOps signing key
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap text-[11px]">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#121019] text-[#A39FB8] border border-[#40375C]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#6FCF97]"></span> Security
+                    </span>
+                    <span class="font-mono text-[#E5767F] font-semibold">Overdue (28 Oct)</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-[#40375C]/40 text-[11px] text-[#A39FB8]">
+                    <span class="font-mono">30m</span>
+                    <span class="font-mono text-[#E5767F]">1/4</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add Task Ghost Button -->
+              <div class="p-2 border-t border-[#40375C]/40 bg-[#171422]">
+                <button class="w-full py-1.5 rounded-md hover:bg-[#1E1B2E] text-xs text-[#A39FB8] hover:text-[#ECE9F6] flex items-center justify-center gap-1.5 transition-colors">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  Add task
+                </button>
+              </div>
+            </div>
+
+
+            <!-- COLUMN 4: DONE -->
+            <div class="flex flex-col bg-[#171422] rounded-xl border border-[#40375C]/70 overflow-hidden">
+              <!-- Column Header -->
+              <div class="px-3.5 py-3 border-b border-[#40375C]/50 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-[#6FCF97]"></span>
+                  <h3 class="font-semibold text-xs text-[#ECE9F6] uppercase tracking-wide">Done</h3>
+                  <span class="font-mono text-[11px] px-1.5 py-0.2 rounded bg-[#1E1B2E] border border-[#40375C] text-[#6FCF97]">5</span>
+                </div>
+                <button class="text-[#A39FB8] hover:text-[#ECE9F6]">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
+                </button>
+              </div>
+
+              <!-- Column Cards Container -->
+              <div class="flex-1 p-2.5 space-y-2.5 overflow-y-auto opacity-80 hover:opacity-100 transition-opacity">
+                <!-- Card 1 (Done state) -->
+                <div class="bg-[#1E1B2E]/60 border border-[#40375C]/60 rounded-lg p-3 space-y-2.5">
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="text-xs line-through text-[#A39FB8] leading-snug">Review pull request #418 for telemetry gateway</h4>
+                    <span class="w-4 h-4 rounded-full bg-[#6FCF97]/20 text-[#6FCF97] flex items-center justify-center text-[10px]">✓</span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap text-[11px]">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#121019] text-[#A39FB8]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#5A4F7C]"></span> Core Engine
+                    </span>
+                    <span class="font-mono text-[#6F6A87]">Completed 09:30</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-[#40375C]/30 text-[11px] text-[#6F6A87]">
+                    <span class="font-mono">45m</span>
+                    <span class="font-mono text-[#6FCF97]">5/5</span>
+                  </div>
+                </div>
+
+                <!-- Card 2 (Done state) -->
+                <div class="bg-[#1E1B2E]/60 border border-[#40375C]/60 rounded-lg p-3 space-y-2.5">
+                  <div class="flex items-start justify-between gap-2">
+                    <h4 class="text-xs line-through text-[#A39FB8] leading-snug">Provision Redis cache for telemetry tokens</h4>
+                    <span class="w-4 h-4 rounded-full bg-[#6FCF97]/20 text-[#6FCF97] flex items-center justify-center text-[10px]">✓</span>
+                  </div>
+                  <div class="flex items-center gap-2 flex-wrap text-[11px]">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#121019] text-[#A39FB8]">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#5A4F7C]"></span> Infra 2025
+                    </span>
+                    <span class="font-mono text-[#6F6A87]">Yesterday</span>
+                  </div>
+                  <div class="flex items-center justify-between pt-1 border-t border-[#40375C]/30 text-[11px] text-[#6F6A87]">
+                    <span class="font-mono">30m</span>
+                    <span class="font-mono text-[#6FCF97]">3/3</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Add Task Ghost Button -->
+              <div class="p-2 border-t border-[#40375C]/40 bg-[#171422]">
+                <button class="w-full py-1.5 rounded-md hover:bg-[#1E1B2E] text-xs text-[#A39FB8] hover:text-[#ECE9F6] flex items-center justify-center gap-1.5 transition-colors">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  Add task
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+      </div>
+
+      <!-- Frame Technical Footer Spec -->
+      <footer class="px-4 py-2 bg-[#171422] border-t border-[#40375C] flex items-center justify-between text-[11px] font-mono text-[#A39FB8]">
+        <div class="flex items-center gap-3">
+          <span class="text-[#9D8DF1]">● KANBAN DISPATCHER: ACTIVE</span>
+          <span>•</span>
+          <span>DRAG PHYSICS: 60Hz SNAP-TO-TARGET (SPRING TENSION 180)</span>
+        </div>
+        <div>SPEC: SYS-TSK-BOARD.02</div>
+      </footer>
+    </div>
+
+  </main>
+
+</body>
+</html>
