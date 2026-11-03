@@ -32,9 +32,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // 1. Not signed in -> redirect to /sign-in with return URL
+  // 1. Not signed in -> redirect to /auth/sign-in with return URL
   if (!session || !user) {
-    return <Navigate to="/sign-in" state={{ from: location }} replace />;
+    return <Navigate to="/auth/sign-in" state={{ from: location }} replace />;
   }
 
   // 2. Unverified email -> block access to all private routes (FR-AUTH-2)

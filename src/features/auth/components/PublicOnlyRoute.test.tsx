@@ -29,10 +29,10 @@ describe('PublicOnlyRoute', () => {
   it('allows unauthenticated visitors to view public auth route', () => {
     render(
       <AuthProvider initialSession={null} initialLoading={false}>
-        <MemoryRouter initialEntries={['/sign-up']}>
+        <MemoryRouter initialEntries={['/auth/sign-up']}>
           <Routes>
             <Route element={<PublicOnlyRoute />}>
-              <Route path="/sign-up" element={<div>Sign Up Screen</div>} />
+              <Route path="/auth/sign-up" element={<div>Sign Up Screen</div>} />
             </Route>
           </Routes>
         </MemoryRouter>
@@ -47,11 +47,11 @@ describe('PublicOnlyRoute', () => {
 
     render(
       <AuthProvider initialSession={session} initialLoading={false}>
-        <MemoryRouter initialEntries={['/sign-up']}>
+        <MemoryRouter initialEntries={['/auth/sign-up']}>
           <Routes>
             <Route path="/today" element={<div>Today Dashboard</div>} />
             <Route element={<PublicOnlyRoute />}>
-              <Route path="/sign-up" element={<div>Sign Up Screen</div>} />
+              <Route path="/auth/sign-up" element={<div>Sign Up Screen</div>} />
             </Route>
           </Routes>
         </MemoryRouter>
