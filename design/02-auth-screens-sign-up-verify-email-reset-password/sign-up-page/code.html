@@ -1,0 +1,171 @@
+<!DOCTYPE html><html class="h-full bg-[#121019]" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Create Account | Northstar OS</title>
+<!-- Tailwind CSS CDN with forms and container queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" class="">
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#121019',
+            surface: '#1E1B2E',
+            borderPrimary: '#40375C',
+            accentViolet: '#9D8DF1',
+            accentBase: '#5A4F7C',
+            textPrimary: '#ECEBF6',
+            textSecondary: '#8C829E',
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+<!-- Custom styles for fine form styling -->
+<style data-purpose="custom-inputs">
+    .form-input-custom {
+      background-color: #171424;
+      border: 1px solid #40375C;
+      color: #ECEBF6;
+      transition: all 0.15s ease-in-out;
+    }
+    .form-input-custom:focus {
+      border-color: #9D8DF1;
+      box-shadow: 0 0 0 1px #9D8DF1;
+      background-color: #1a1729;
+      outline: none;
+    }
+    .form-input-custom::placeholder {
+      color: #554D69;
+    }
+  </style>
+</head>
+<body class="h-full font-sans text-textPrimary antialiased selection:bg-accentViolet selection:text-obsidian">
+<!-- BEGIN: SignupContainer -->
+<main class="min-h-screen w-full flex flex-col lg:flex-row bg-obsidian">
+<!-- BEGIN: LeftFormSection -->
+<section class="w-full lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 min-h-screen" data-purpose="auth-form-column">
+<!-- Top Brand Header -->
+<header class="flex items-center justify-between" data-purpose="brand-header">
+<a class="inline-flex items-center gap-3 group focus:outline-none focus:ring-1 focus:ring-accentViolet rounded p-1" href="#">
+<!-- Geometric Northstar Logo Mark -->
+<div class="w-8 h-8 rounded-lg bg-surface border border-borderPrimary flex items-center justify-center transition-colors group-hover:border-accentViolet shadow-sm">
+<svg class="w-4 h-4 text-accentViolet" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24">
+<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+</svg>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-semibold tracking-tight text-textPrimary text-base">Northstar</span>
+<span class="font-mono text-xs uppercase tracking-widest text-textSecondary font-medium">OS v2.4</span>
+</div>
+</a>
+</header>
+<!-- Center Auth Form Box -->
+<div class="w-full max-w-[420px] mx-auto py-8 lg:py-4" data-purpose="auth-form-content"><!-- Title & Subtitle -->
+<div class="mb-6">
+  <h1 class="text-2xl sm:text-[28px] font-semibold text-textPrimary tracking-tight">Create your account</h1>
+  <p class="text-sm text-textSecondary mt-1 font-normal">Plan what matters. Do what's next.</p>
+</div>
+
+<!-- Google OAuth Button -->
+<button type="button" class="w-full h-10 px-4 rounded-md bg-[#1c1a24] border border-[#40375C] hover:bg-[#25213b] text-textPrimary font-sans text-sm font-medium flex items-center justify-center gap-3 transition-colors duration-150 shadow-sm">
+  <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+    <path d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.665-5.17 3.665-9.12z" fill="#4285F4"></path>
+    <path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.94H1.26v3.13C3.25 21.31 7.31 24 12 24z" fill="#34A853"></path>
+    <path d="M5.28 14.28c-.25-.72-.38-1.49-.38-2.28s.13-1.56.38-2.28V6.59H1.26C.46 8.19 0 9.99 0 12s.46 3.81 1.26 5.41l4.02-3.13z" fill="#FBBC05"></path>
+    <path d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.94 1.19 15.23 0 12 0 7.31 0 3.25 2.69 1.26 6.59l4.02 3.13c.95-2.84 3.6-4.95 6.72-4.95z" fill="#EA4335"></path>
+  </svg>
+  <span class="">Continue with Google</span>
+</button>
+
+<!-- Divider -->
+<div class="relative my-6 flex items-center justify-center">
+  <div class="absolute inset-0 flex items-center">
+    <div class="w-full border-t border-[#40375C]"></div>
+  </div>
+  <span class="relative px-3 bg-obsidian font-mono text-[11px] text-textSecondary uppercase tracking-wider">or</span>
+</div>
+
+<!-- Form Elements -->
+<form method="POST" action="#" class="space-y-4" onsubmit="event.preventDefault();">
+  <!-- Email Field -->
+  <div class="space-y-1.5">
+    <label for="email" class="block text-xs font-medium text-textSecondary tracking-wide">Email</label>
+    <input id="email" name="email" type="email" value="elena.vance@northstar.io" placeholder="you@example.com" required="" class="w-full h-10 px-3 bg-[#0f0d16] border border-[#40375C] rounded-md text-textPrimary text-sm font-sans placeholder:text-[#554D69] focus:outline-none focus:border-accentViolet focus:ring-1 focus:ring-accentViolet transition-colors">
+  </div>
+
+  <!-- Password Field -->
+  <div class="space-y-1.5">
+    <label for="password" class="block text-xs font-medium text-textSecondary tracking-wide">Password</label>
+    <div class="relative">
+      <input id="password" name="password" type="password" value="Kestrel#2025_Obsidian" required="" class="w-full h-10 pl-3 pr-10 bg-[#0f0d16] border border-[#40375C] rounded-md text-textPrimary text-sm font-mono tracking-widest placeholder:text-[#554D69] focus:outline-none focus:border-accentViolet focus:ring-1 focus:ring-accentViolet transition-colors">
+      <button type="button" aria-label="Toggle password visibility" onclick="const p = document.getElementById('password'); p.type = p.type === 'password' ? 'text' : 'password';" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-textSecondary hover:text-textPrimary p-1 focus:outline-none transition-colors">
+        <span class="material-symbols-outlined text-[18px]">visibility</span>
+      </button>
+    </div>
+    <!-- 4-segment Strength Indicator -->
+    <div class="mt-2 space-y-1.5">
+      <div class="grid grid-cols-4 gap-1.5">
+        <div class="h-[3px] rounded-full bg-accentViolet"></div>
+        <div class="h-[3px] rounded-full bg-accentViolet"></div>
+        <div class="h-[3px] rounded-full bg-accentViolet"></div>
+        <div class="h-[3px] rounded-full bg-[#40375C]"></div>
+      </div>
+      <div class="flex items-center justify-between text-textSecondary">
+        <span class="text-xs text-textSecondary">At least 10 characters</span>
+        <span class="font-mono text-[11px] text-accentViolet font-medium">STRONG (3/4)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Password Field -->
+  <div class="space-y-1.5">
+    <label for="confirmPassword" class="block text-xs font-medium text-textSecondary tracking-wide">Confirm password</label>
+    <div class="relative">
+      <input id="confirmPassword" name="confirmPassword" type="password" value="Kestrel#2025_Obsidian" required="" class="w-full h-10 pl-3 pr-10 bg-[#0f0d16] border border-[#40375C] rounded-md text-textPrimary text-sm font-mono tracking-widest placeholder:text-[#554D69] focus:outline-none focus:border-accentViolet focus:ring-1 focus:ring-accentViolet transition-colors">
+      <button type="button" aria-label="Toggle confirm password visibility" onclick="const p = document.getElementById('confirmPassword'); p.type = p.type === 'password' ? 'text' : 'password';" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-textSecondary hover:text-textPrimary p-1 focus:outline-none transition-colors">
+        <span class="material-symbols-outlined text-[18px]">visibility</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Primary Submit Button -->
+  <div class="pt-2">
+    <button type="submit" class="w-full h-10 px-4 rounded-md bg-[#5a4f7c] hover:bg-[#635885] text-textPrimary font-medium text-sm flex items-center justify-center gap-2 transition-colors border border-transparent shadow-sm focus:outline-none focus:ring-2 focus:ring-accentViolet focus:ring-offset-2 focus:ring-offset-obsidian active:scale-[0.99]">
+      <span class="">Create account</span>
+      <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+    </button>
+  </div>
+</form>
+
+<!-- Footer Sign-in Link -->
+<div class="mt-6 text-center">
+  <p class="text-sm text-textSecondary">
+    Already have an account? 
+    <a href="#" class="text-accentViolet hover:text-[#c9beff] transition-colors underline-offset-4 hover:underline font-medium">Sign in</a>
+  </p>
+</div></div>
+<!-- Bottom System Status Footer -->
+<footer class="text-[11px] text-[#554D69] flex justify-between items-center" data-purpose="column-footer">
+<span class="font-mono">SYS.STATUS: OPERATIONAL</span>
+<span class="">Secure Telemetry Auth</span>
+</footer>
+</section>
+<!-- END: LeftFormSection -->
+<!-- BEGIN: RightVisualSection -->
+<section class="hidden lg:flex lg:w-1/2 relative bg-[#09080e] border-l border-borderPrimary overflow-hidden" data-purpose="visual-brand-column"><div class="relative w-full h-full min-h-screen flex flex-col justify-between items-center p-8 lg:p-12 bg-[#0d0b14] overflow-hidden select-none"><div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(circle at 60% 48%, rgba(157, 141, 241, 0.12) 0%, rgba(90, 79, 124, 0.05) 45%, rgba(13, 11, 20, 0.95) 75%), radial-gradient(circle at 20% 80%, rgba(74, 57, 152, 0.08) 0%, transparent 50%);"></div><div class="relative z-10 text-center pt-4"><h2 class="text-xl md:text-2xl font-bold tracking-[0.25em] text-[#ECEBF6] font-sans flex items-center justify-center gap-2"><span class="">NORTHSTAR</span><span class="text-[#9D8DF1]">OS</span></h2><p class="text-[11px] uppercase tracking-[0.35em] text-[#8C829E] font-mono mt-1">CELESTIAL GUIDANCE SYSTEM</p></div><div class="relative z-10 w-full max-w-[620px] aspect-square flex items-center justify-center my-auto"><svg viewBox="0 0 700 700" class="w-full h-full max-h-[580px] drop-shadow-[0_0_35px_rgba(157,141,241,0.25)]"><defs><filter id="glow-star" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"></feGaussianBlur><feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter><filter id="glow-strong" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur"></feGaussianBlur><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="sharp"></feGaussianBlur><feMerge><feMergeNode in="blur"></feMergeNode><feMergeNode in="sharp"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter><radialGradient id="polaris-radial" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#FFFFFF"></stop><stop offset="25%" stop-color="#C9BEFF"></stop><stop offset="60%" stop-color="#9D8DF1" stop-opacity="0.4"></stop><stop offset="100%" stop-color="#121019" stop-opacity="0"></stop></radialGradient></defs><g opacity="0.55"><circle cx="140" cy="180" r="1" fill="#cac4cf" opacity="0.6"></circle><circle cx="220" cy="110" r="0.8" fill="#ffffff" opacity="0.4"></circle><circle cx="310" cy="90" r="1.2" fill="#cac4cf" opacity="0.5"></circle><circle cx="520" cy="130" r="1" fill="#ffffff" opacity="0.7"></circle><circle cx="610" cy="240" r="0.8" fill="#9D8DF1" opacity="0.6"></circle><circle cx="580" cy="520" r="1" fill="#ffffff" opacity="0.4"></circle><circle cx="480" cy="620" r="1.2" fill="#cac4cf" opacity="0.5"></circle><circle cx="190" cy="590" r="0.9" fill="#ffffff" opacity="0.4"></circle><circle cx="110" cy="430" r="1" fill="#9D8DF1" opacity="0.6"></circle><circle cx="350" cy="640" r="0.8" fill="#ffffff" opacity="0.5"></circle></g><g fill="none" opacity="0.8"><ellipse cx="365" cy="355" rx="260" ry="185" stroke="#5A4F7C" stroke-width="1.2" transform="rotate(-28 365 355)"></ellipse><ellipse cx="365" cy="355" rx="245" ry="220" stroke="#4A3998" stroke-width="1" opacity="0.6" transform="rotate(18 365 355)"></ellipse><ellipse cx="365" cy="355" rx="270" ry="150" stroke="#9D8DF1" stroke-width="1.4" opacity="0.5" transform="rotate(-42 365 355)"></ellipse><ellipse cx="395" cy="325" rx="230" ry="130" stroke="#635885" stroke-dasharray="3 5" stroke-width="0.8" opacity="0.7" transform="rotate(-15 395 325)"></ellipse><ellipse cx="350" cy="370" rx="280" ry="190" stroke="#40375C" stroke-width="1" transform="rotate(35 350 370)"></ellipse></g><g stroke="#9D8DF1" stroke-width="1.6" opacity="0.85" stroke-linecap="round"><line x1="415" y1="245" x2="370" y2="285"></line><line x1="370" y1="285" x2="340" y2="325"></line><line x1="340" y1="325" x2="360" y2="375"></line><line x1="370" y1="285" x2="360" y2="375"></line><line x1="360" y1="375" x2="415" y2="245" stroke-dasharray="2 4" stroke-width="1" opacity="0.6"></line><line x1="340" y1="325" x2="300" y2="415"></line><line x1="360" y1="375" x2="345" y2="415"></line><line x1="300" y1="415" x2="345" y2="415"></line><line x1="300" y1="415" x2="235" y2="485"></line><line x1="345" y1="415" x2="335" y2="455"></line><line x1="235" y1="485" x2="335" y2="455"></line><line x1="335" y1="455" x2="410" y2="462"></line><line x1="415" y1="245" x2="475" y2="365"></line></g><g><circle cx="415" cy="245" r="38" fill="url(#polaris-radial)"></circle><path d="M415 227 L415 263 M397 245 L433 245" stroke="#FFFFFF" stroke-width="1.4" opacity="0.95"></path><circle cx="415" cy="245" r="4.5" fill="#FFFFFF" filter="url(#glow-strong)"></circle><circle cx="415" cy="245" r="2" fill="#121019"></circle><circle cx="370" cy="285" r="3" fill="#E8DDFF" filter="url(#glow-star)"></circle><circle cx="340" cy="325" r="2.6" fill="#E8DDFF" filter="url(#glow-star)"></circle><circle cx="360" cy="375" r="2.6" fill="#C9BEFF" filter="url(#glow-star)"></circle><circle cx="300" cy="415" r="3.4" fill="#FFFFFF" filter="url(#glow-star)"></circle><circle cx="345" cy="415" r="3" fill="#C9BEFF" filter="url(#glow-star)"></circle><circle cx="235" cy="485" r="3.6" fill="#FFFFFF" filter="url(#glow-strong)"></circle><circle cx="335" cy="455" r="2.5" fill="#C9BEFF"></circle><circle cx="410" cy="462" r="2.4" fill="#C9BEFF"></circle><circle cx="475" cy="365" r="3" fill="#E8DDFF" filter="url(#glow-star)"></circle></g><g font-family="'JetBrains Mono', 'IBM Plex Mono', monospace" font-size="9" fill="#ECEBF6" letter-spacing="0.08em"><text x="430" y="240" font-weight="600" fill="#FFFFFF">POLARIS</text><text x="430" y="251" font-size="7.5" fill="#9D8DF1" letter-spacing="0.12em">[NORTHSTAR]</text><g opacity="0.8"><line x1="435" y1="268" x2="445" y2="268" stroke="#9D8DF1" stroke-width="0.8"></line><circle cx="435" cy="268" r="1.2" fill="#9D8DF1"></circle><text x="450" y="270" font-size="7" fill="#C9BEFF">DIRECTION OF NORTH</text><text x="450" y="281" font-size="6.5" fill="#8C829E" letter-spacing="0.1em">CALIBRATION: 08M.RESEC</text></g><text x="392" y="295" font-size="7.5" fill="#8C829E">KOCHAB</text><text x="306" y="324" font-size="7.5" fill="#8C829E">YILDUN</text><text x="368" y="360" font-size="7" fill="#8C829E">YILDUN</text><text x="262" y="418" font-size="8" fill="#CAC4CF">KOCHAB</text><text x="352" y="418" font-size="7.5" fill="#8C829E">PHERKAD</text><text x="240" y="500" font-size="8" fill="#C9BEFF">YILDUN</text><text x="483" y="368" font-size="7.5" fill="#8C829E">YILDUN</text></g></svg></div><div class="relative z-10 text-center pb-2"><p class="font-mono text-[11px] text-[#8C829E] tracking-[0.2em] uppercase">RA: 14h 51m 11.6s | DEC: +74° 09' 18"</p></div></div></section>
+<!-- END: RightVisualSection -->
+</main>
+<!-- END: SignupContainer -->
+
+
+</body></html>

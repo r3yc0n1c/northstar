@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Northstar — Mobile Today & Quick Capture</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & IBM Plex Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#121019',
+            surface: '#1E1B2E',
+            elevated: '#262238',
+            mutedBorder: '#40375C',
+            accent: '#5A4F7C',
+            accentHover: '#675B8C',
+            highlight: '#9D8DF1',
+            textPrimary: '#ECE9F6',
+            textSecondary: '#A39FB8',
+            textTertiary: '#6F6A87',
+            statusSuccess: '#6FCF97',
+            statusWarning: '#E8B866',
+            statusDanger: '#E5707F',
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['IBM Plex Mono', 'monospace'],
+          },
+          boxShadow: {
+            glow: '0 0 0 2px #9D8DF1',
+            floating: '0 8px 24px -4px rgba(10, 8, 16, 0.6), 0 2px 6px 0 rgba(10, 8, 16, 0.4)',
+            sheet: '0 -10px 32px rgba(10, 8, 16, 0.75)',
+          },
+          borderRadius: {
+            DEFAULT: '6px',
+            card: '10px',
+            pill: '9999px',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0b0a10;
+      color: #ECE9F6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .font-mono-tabular {
+      font-family: 'IBM Plex Mono', monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    /* Hide scrollbars for clean presentation */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="p-6 md:p-10 flex flex-col items-center justify-start min-h-screen">
+
+  <!-- Header Showcase Banner -->
+  <header class="w-full max-w-[880px] mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-mutedBorder pb-4">
+    <div class="flex items-center gap-3">
+      <div class="w-7 h-7 rounded-md bg-elevated border border-mutedBorder flex items-center justify-center">
+        <!-- 4-point star -->
+        <svg class="w-4 h-4 text-highlight" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-lg font-semibold tracking-tight text-textPrimary flex items-center gap-2">
+          Northstar <span class="text-xs px-2 py-0.5 rounded font-mono-tabular bg-elevated border border-mutedBorder text-textSecondary font-normal">MOBILE VIEWPORT 390×844</span>
+        </h1>
+        <p class="text-xs text-textSecondary">Today Screen Ecosystem: Main Dashboard & Quick-Capture Modal</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 text-xs font-mono-tabular text-textTertiary">
+      <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-statusSuccess"></span> 60Hz FLUID TOUCH</span>
+      <span>•</span>
+      <span>4PX GRID CALIBRATED</span>
+    </div>
+  </header>
+
+  <!-- Dual Device Frame Container -->
+  <main class="w-full max-w-[880px] flex flex-col lg:flex-row items-center lg:items-start justify-center gap-10">
+
+    <!-- ========================================================================= -->
+    <!-- FRAME 1: TODAY SCREEN (DEFAULT STATE) -->
+    <!-- ========================================================================= -->
+    <section class="flex flex-col items-center">
+      <div class="text-center mb-3">
+        <span class="text-xs font-mono-tabular uppercase tracking-wider text-textSecondary bg-surface px-2.5 py-1 rounded border border-mutedBorder">
+          FRAME 01 // TODAY MAIN VIEW
+        </span>
+      </div>
+
+      <!-- Mobile Device Shell (390 x 844) -->
+      <div class="w-[390px] h-[844px] bg-obsidian rounded-[44px] border-[6px] border-[#262238] shadow-2xl relative flex flex-col overflow-hidden ring-1 ring-mutedBorder">
+
+        <!-- Mobile Notch / Dynamic Island / Status Bar -->
+        <div class="h-11 px-7 pt-2 flex items-center justify-between text-xs font-mono-tabular text-textSecondary shrink-0 z-30 select-none">
+          <span class="font-medium text-textPrimary text-[13px]">9:41</span>
+          <div class="w-28 h-5 bg-black rounded-full absolute left-1/2 -translate-x-1/2 top-2 flex items-center justify-center">
+            <div class="w-2.5 h-2.5 rounded-full bg-[#161420] ml-auto mr-2"></div>
+          </div>
+          <div class="flex items-center gap-1.5 text-[11px]">
+            <svg class="w-3.5 h-3.5 text-textPrimary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4a1 1 0 001.41 1.41l1.79-.62C9.13 21.26 10.5 21.5 12 21.5c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 16c-1.16 0-2.26-.26-3.25-.72l-1.92.67.67-1.92A7.95 7.95 0 015 12c0-3.86 3.14-7 7-7s7 3.14 7 7-3.14 7-7 7z"/></svg>
+            <svg class="w-3.5 h-3.5 text-textPrimary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4a8 8 0 00-8 8c0 2.12.74 4.07 1.97 5.61L4 20l2.39-1.97A7.96 7.96 0 0012 20a8 8 0 100-16z"/></svg>
+            <div class="w-5 h-2.5 border border-textPrimary rounded-sm p-0.5 flex items-center">
+              <div class="h-full w-full bg-statusSuccess rounded-2xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sticky Mobile Top Bar -->
+        <header class="px-5 pt-1.5 pb-3 flex items-center justify-between border-b border-mutedBorder bg-obsidian/95 backdrop-blur-sm shrink-0 z-20">
+          <div>
+            <h2 class="text-xl font-bold tracking-tight text-textPrimary leading-none">Today</h2>
+            <p class="text-[12px] font-mono-tabular text-textSecondary mt-1">Monday, 2 Nov</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="w-8 h-8 rounded-full bg-surface border border-mutedBorder flex items-center justify-center text-textSecondary hover:text-textPrimary hover:border-highlight transition-colors" aria-label="Search or quick commands">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7"/>
+                <path stroke-linecap="round" d="m20 20-3.5-3.5"/>
+              </svg>
+            </button>
+            <!-- User Avatar Initials -->
+            <div class="w-8 h-8 rounded-full bg-accent border border-highlight/50 flex items-center justify-center text-xs font-semibold text-textPrimary tracking-tight">
+              AR
+            </div>
+          </div>
+        </header>
+
+        <!-- Scrollable Main Viewport -->
+        <div class="flex-1 overflow-y-auto px-4 py-4 space-y-5 no-scrollbar pb-24">
+
+          <!-- Section: Big Three Focus (Min 56px touch targets) -->
+          <section>
+            <div class="flex items-center justify-between mb-2.5 px-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-semibold uppercase tracking-wider text-textPrimary">Big Three</span>
+                <span class="text-[11px] font-mono-tabular text-textTertiary">Key outcomes</span>
+              </div>
+              <span class="text-xs font-mono-tabular text-highlight font-medium">1 / 3 DONE</span>
+            </div>
+
+            <div class="space-y-2">
+              <!-- Big Three Item 1 (Active) -->
+              <div class="min-h-[58px] p-3 rounded-card bg-surface border border-mutedBorder flex items-center gap-3 active:bg-elevated transition-colors">
+                <button class="w-6 h-6 rounded-full border-2 border-mutedBorder hover:border-highlight flex items-center justify-center shrink-0 transition-colors" aria-label="Mark task done">
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[13px] font-medium text-textPrimary leading-snug truncate">Finalize Q4 infrastructure budget & cloud tier</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono-tabular text-textSecondary bg-elevated border border-mutedBorder">
+                      <svg class="w-3 h-3 text-textTertiary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                      Infra 2025
+                    </span>
+                    <span class="text-[11px] font-mono-tabular text-textSecondary">1h 45m</span>
+                    <span class="text-[10px] font-mono-tabular px-1 rounded bg-statusDanger/10 text-statusDanger border border-statusDanger/20">P1</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Big Three Item 2 (Completed) -->
+              <div class="min-h-[58px] p-3 rounded-card bg-surface/70 border border-mutedBorder/60 flex items-center gap-3">
+                <div class="w-6 h-6 rounded-full bg-accent border border-highlight flex items-center justify-center shrink-0">
+                  <svg class="w-3.5 h-3.5 text-textPrimary" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[13px] font-normal text-textTertiary line-through leading-snug truncate">Review pull request #418 for telemetry engine</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono-tabular text-textTertiary bg-elevated/50 border border-mutedBorder/40">
+                      Core Engine
+                    </span>
+                    <span class="text-[11px] font-mono-tabular text-textTertiary">45m</span>
+                    <span class="text-[10px] font-mono-tabular text-statusSuccess">COMPLETED</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Big Three Item 3 (Active) -->
+              <div class="min-h-[58px] p-3 rounded-card bg-surface border border-mutedBorder flex items-center gap-3 active:bg-elevated transition-colors">
+                <button class="w-6 h-6 rounded-full border-2 border-mutedBorder hover:border-highlight flex items-center justify-center shrink-0 transition-colors" aria-label="Mark task done">
+                </button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[13px] font-medium text-textPrimary leading-snug truncate">Draft executive summary for board sync</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono-tabular text-textSecondary bg-elevated border border-mutedBorder">
+                      <svg class="w-3 h-3 text-textTertiary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                      Strategy
+                    </span>
+                    <span class="text-[11px] font-mono-tabular text-textSecondary">1h 00m</span>
+                    <span class="text-[10px] font-mono-tabular px-1 rounded bg-elevated text-textSecondary border border-mutedBorder">P2</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section: Compact Capacity Bar -->
+          <section class="p-3 rounded-card bg-surface border border-mutedBorder space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-medium text-textPrimary flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-highlight" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                Capacity
+              </span>
+              <span class="font-mono-tabular text-textPrimary text-[12px] font-medium">5h 30m <span class="text-textTertiary font-normal">/ 6h 00m</span></span>
+            </div>
+
+            <!-- Segmented Progress Bar -->
+            <div class="h-2 w-full bg-elevated rounded-full overflow-hidden flex border border-mutedBorder/50">
+              <div class="h-full bg-highlight rounded-l-full" style="width: 72%;"></div>
+              <div class="h-full bg-accent" style="width: 20%;"></div>
+              <div class="h-full bg-mutedBorder" style="width: 8%;"></div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] font-mono-tabular text-textSecondary pt-0.5">
+              <span>91% committed</span>
+              <span class="text-textTertiary">2 unestimated</span>
+            </div>
+          </section>
+
+          <!-- Section: Plan List (Scheduled with Left Rule & Unscheduled) -->
+          <section>
+            <div class="flex items-center justify-between mb-2 px-1">
+              <h3 class="text-xs font-semibold uppercase tracking-wider text-textPrimary">Plan</h3>
+              <span class="text-[11px] font-mono-tabular text-textTertiary">6 tasks scheduled</span>
+            </div>
+
+            <div class="space-y-1.5">
+              <!-- Plan Item 1 (Scheduled 09:00 - 10:30) -->
+              <div class="p-2.5 rounded bg-surface border border-mutedBorder flex items-center gap-2.5 relative pl-3.5">
+                <!-- Thin #9D8DF1 Left Rule -->
+                <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-highlight rounded-l"></div>
+                <div class="w-16 shrink-0 text-[11px] font-mono-tabular text-highlight font-medium">09:00–10:30</div>
+                <button class="w-4 h-4 rounded-full border border-mutedBorder shrink-0"></button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-textPrimary truncate">Sprint planning & backlog grooming</p>
+                </div>
+                <span class="text-[10px] font-mono-tabular text-statusDanger bg-statusDanger/10 px-1 py-0.5 rounded border border-statusDanger/20">P1</span>
+              </div>
+
+              <!-- Plan Item 2 (Scheduled 10:45 - 11:30) -->
+              <div class="p-2.5 rounded bg-surface border border-mutedBorder flex items-center gap-2.5 relative pl-3.5">
+                <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-highlight rounded-l"></div>
+                <div class="w-16 shrink-0 text-[11px] font-mono-tabular text-highlight font-medium">10:45–11:30</div>
+                <button class="w-4 h-4 rounded-full border border-mutedBorder shrink-0"></button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-textPrimary truncate">1-on-1 sync with engineering lead</p>
+                </div>
+                <span class="text-[10px] font-mono-tabular text-textSecondary bg-elevated px-1 py-0.5 rounded border border-mutedBorder">P2</span>
+              </div>
+
+              <!-- Plan Item 3 (Scheduled 13:30 - 15:00) -->
+              <div class="p-2.5 rounded bg-surface border border-mutedBorder flex items-center gap-2.5 relative pl-3.5">
+                <div class="absolute left-0 top-0 bottom-0 w-[3px] bg-highlight rounded-l"></div>
+                <div class="w-16 shrink-0 text-[11px] font-mono-tabular text-highlight font-medium">13:30–15:00</div>
+                <button class="w-4 h-4 rounded-full border border-mutedBorder shrink-0"></button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-textPrimary truncate">Deep focus: write architecture doc</p>
+                </div>
+                <span class="text-[10px] font-mono-tabular text-statusDanger bg-statusDanger/10 px-1 py-0.5 rounded border border-statusDanger/20">P1</span>
+              </div>
+
+              <!-- Plan Item 4 (Unscheduled) -->
+              <div class="p-2.5 rounded bg-surface border border-mutedBorder flex items-center gap-2.5 pl-3.5">
+                <div class="w-16 shrink-0 text-[11px] font-mono-tabular text-textTertiary">—</div>
+                <button class="w-4 h-4 rounded-full border border-mutedBorder shrink-0"></button>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-textPrimary truncate">Audit zero-knowledge vault permissions</p>
+                </div>
+                <span class="text-[10px] font-mono-tabular text-textSecondary bg-elevated px-1 py-0.5 rounded border border-mutedBorder">P2</span>
+              </div>
+
+              <!-- Plan Item 5 (Unscheduled Done) -->
+              <div class="p-2.5 rounded bg-surface/70 border border-mutedBorder/60 flex items-center gap-2.5 pl-3.5">
+                <div class="w-16 shrink-0 text-[11px] font-mono-tabular text-textTertiary">—</div>
+                <div class="w-4 h-4 rounded-full bg-accent border border-highlight flex items-center justify-center shrink-0">
+                  <svg class="w-2.5 h-2.5 text-textPrimary" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-textTertiary line-through truncate">Review vendor contract for telemetry</p>
+                </div>
+                <span class="text-[10px] font-mono-tabular text-statusSuccess">DONE</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Section: Collapsible Accordions (Habits, At-Risk KRs, Carry-Over) -->
+          <section class="space-y-2 pt-1">
+            <!-- Accordion 1: Habits Due (3) -->
+            <details class="group rounded-card bg-surface border border-mutedBorder overflow-hidden" open>
+              <summary class="p-3 flex items-center justify-between text-xs font-medium text-textPrimary cursor-pointer list-none select-none hover:bg-elevated/50 transition-colors">
+                <div class="flex items-center gap-2">
+                  <svg class="w-3.5 h-3.5 text-highlight" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  <span>Habits due</span>
+                  <span class="px-1.5 py-0.2 rounded font-mono-tabular text-[11px] bg-elevated border border-mutedBorder text-textSecondary">3</span>
+                </div>
+                <div class="flex items-center gap-2 text-textTertiary">
+                  <span class="font-mono-tabular text-[11px]">1/3 done</span>
+                  <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="m6 9 6 6 6-6"/></svg>
+                </div>
+              </summary>
+              <div class="px-3 pb-3 pt-1 border-t border-mutedBorder/50 space-y-2">
+                <div class="flex items-center justify-between text-xs py-1">
+                  <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full bg-accent border border-highlight flex items-center justify-center">
+                      <svg class="w-2.5 h-2.5 text-textPrimary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <span class="line-through text-textTertiary">Morning meditation</span>
+                  </div>
+                  <span class="font-mono-tabular text-[10px] text-textTertiary">14d streak</span>
+                </div>
+                <div class="flex items-center justify-between text-xs py-1">
+                  <div class="flex items-center gap-2">
+                    <button class="w-4 h-4 rounded-full border border-mutedBorder"></button>
+                    <span class="text-textPrimary">Deep reading (Systems)</span>
+                  </div>
+                  <span class="font-mono-tabular text-[10px] text-highlight">6d streak</span>
+                </div>
+              </div>
+            </details>
+
+            <!-- Accordion 2: At-Risk Key Results (2) -->
+            <details class="group rounded-card bg-surface border border-mutedBorder overflow-hidden">
+              <summary class="p-3 flex items-center justify-between text-xs font-medium text-textPrimary cursor-pointer list-none select-none hover:bg-elevated/50 transition-colors">
+                <div class="flex items-center gap-2">
+                  <svg class="w-3.5 h-3.5 text-statusWarning" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                  <span>At-risk key results</span>
+                  <span class="px-1.5 py-0.2 rounded font-mono-tabular text-[11px] bg-statusWarning/10 text-statusWarning border border-statusWarning/30">2</span>
+                </div>
+                <div class="flex items-center gap-2 text-textTertiary">
+                  <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="m6 9 6 6 6-6"/></svg>
+                </div>
+              </summary>
+              <div class="px-3 pb-3 pt-1 border-t border-mutedBorder/50 space-y-2.5">
+                <div class="text-xs">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-textPrimary font-normal truncate">Achieve 99.9% Core uptime</span>
+                    <span class="font-mono-tabular text-statusWarning text-[11px]">74.5%</span>
+                  </div>
+                  <div class="h-1 bg-elevated rounded-full overflow-hidden">
+                    <div class="h-full bg-statusWarning" style="width: 74.5%;"></div>
+                  </div>
+                </div>
+                <div class="text-xs">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-textPrimary font-normal truncate">Complete 50 deep focus blocks</span>
+                    <span class="font-mono-tabular text-statusDanger text-[11px]">36.0%</span>
+                  </div>
+                  <div class="h-1 bg-elevated rounded-full overflow-hidden">
+                    <div class="h-full bg-statusDanger" style="width: 36%;"></div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <!-- Accordion 3: Carry-Over (3) -->
+            <details class="group rounded-card bg-surface border border-mutedBorder overflow-hidden">
+              <summary class="p-3 flex items-center justify-between text-xs font-medium text-textPrimary cursor-pointer list-none select-none hover:bg-elevated/50 transition-colors">
+                <div class="flex items-center gap-2">
+                  <svg class="w-3.5 h-3.5 text-textSecondary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span>Carry-over</span>
+                  <span class="px-1.5 py-0.2 rounded font-mono-tabular text-[11px] bg-elevated border border-mutedBorder text-textSecondary">3</span>
+                </div>
+                <div class="flex items-center gap-2 text-highlight text-[11px] font-mono-tabular">
+                  <span>Review</span>
+                  <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform text-textTertiary" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="m6 9 6 6 6-6"/></svg>
+                </div>
+              </summary>
+              <div class="px-3 pb-3 pt-1 border-t border-mutedBorder/50 text-[11px] text-textSecondary">
+                3 tasks pending from Friday. Review or reschedule to today.
+              </div>
+            </details>
+          </section>
+
+        </div>
+
+        <!-- Floating Circular Quick-Capture Button (#5A4F7C with plus icon) -->
+        <button class="absolute bottom-[72px] right-4 w-12 h-12 rounded-full bg-accent hover:bg-accentHover active:scale-95 text-textPrimary shadow-floating flex items-center justify-center z-30 border border-highlight/30 transition-all" aria-label="Open Quick Capture">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+        </button>
+
+        <!-- Bottom Tab Bar (Height min 44px touch targets + Safe Area) -->
+        <nav class="h-[68px] bg-surface border-t border-mutedBorder px-3 pb-3 pt-1 flex items-center justify-around shrink-0 z-20">
+          <!-- Item 1: Today (Active) -->
+          <button class="flex flex-col items-center justify-center min-w-[54px] min-h-[44px] text-highlight">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-[10px] font-medium tracking-tight mt-0.5">Today</span>
+            <div class="w-1 h-1 rounded-full bg-highlight mt-0.5"></div>
+          </button>
+
+          <!-- Item 2: Inbox (Badge 4) -->
+          <button class="flex flex-col items-center justify-center min-w-[54px] min-h-[44px] text-textSecondary hover:text-textPrimary relative">
+            <div class="relative">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+              </svg>
+              <span class="absolute -top-1 -right-2 px-1 py-0.2 rounded-full font-mono-tabular text-[9px] bg-accent text-textPrimary border border-highlight/40 leading-none">4</span>
+            </div>
+            <span class="text-[10px] tracking-tight mt-0.5">Inbox</span>
+            <div class="w-1 h-1 mt-0.5"></div>
+          </button>
+
+          <!-- Item 3: Habits -->
+          <button class="flex flex-col items-center justify-center min-w-[54px] min-h-[44px] text-textSecondary hover:text-textPrimary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <span class="text-[10px] tracking-tight mt-0.5">Habits</span>
+            <div class="w-1 h-1 mt-0.5"></div>
+          </button>
+
+          <!-- Item 4: Tasks -->
+          <button class="flex flex-col items-center justify-center min-w-[54px] min-h-[44px] text-textSecondary hover:text-textPrimary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+            <span class="text-[10px] tracking-tight mt-0.5">Tasks</span>
+            <div class="w-1 h-1 mt-0.5"></div>
+          </button>
+
+          <!-- Item 5: More -->
+          <button class="flex flex-col items-center justify-center min-w-[54px] min-h-[44px] text-textSecondary hover:text-textPrimary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+              <circle cx="5" cy="12" r="1.5"/>
+              <circle cx="12" cy="12" r="1.5"/>
+              <circle cx="19" cy="12" r="1.5"/>
+            </svg>
+            <span class="text-[10px] tracking-tight mt-0.5">More</span>
+            <div class="w-1 h-1 mt-0.5"></div>
+          </button>
+        </nav>
+
+        <!-- iOS Home Indicator -->
+        <div class="h-4 bg-surface flex justify-center items-center shrink-0">
+          <div class="w-32 h-1 bg-textSecondary/30 rounded-full"></div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ========================================================================= -->
+    <!-- FRAME 2: QUICK CAPTURE BOTTOM SHEET OPEN + KEYBOARD IMPLIED -->
+    <!-- ========================================================================= -->
+    <section class="flex flex-col items-center">
+      <div class="text-center mb-3">
+        <span class="text-xs font-mono-tabular uppercase tracking-wider text-highlight bg-surface px-2.5 py-1 rounded border border-highlight/40">
+          FRAME 02 // QUICK CAPTURE SHEET OPEN
+        </span>
+      </div>
+
+      <!-- Mobile Device Shell (390 x 844) -->
+      <div class="w-[390px] h-[844px] bg-obsidian rounded-[44px] border-[6px] border-[#262238] shadow-2xl relative flex flex-col overflow-hidden ring-1 ring-mutedBorder">
+
+        <!-- Status Bar -->
+        <div class="h-11 px-7 pt-2 flex items-center justify-between text-xs font-mono-tabular text-textSecondary shrink-0 z-30 select-none">
+          <span class="font-medium text-textPrimary text-[13px]">9:41</span>
+          <div class="w-28 h-5 bg-black rounded-full absolute left-1/2 -translate-x-1/2 top-2 flex items-center justify-center">
+            <div class="w-2.5 h-2.5 rounded-full bg-[#161420] ml-auto mr-2"></div>
+          </div>
+          <div class="flex items-center gap-1.5 text-[11px]">
+            <svg class="w-3.5 h-3.5 text-textPrimary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4a1 1 0 001.41 1.41l1.79-.62C9.13 21.26 10.5 21.5 12 21.5c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 16c-1.16 0-2.26-.26-3.25-.72l-1.92.67.67-1.92A7.95 7.95 0 015 12c0-3.86 3.14-7 7-7s7 3.14 7 7-3.14 7-7 7z"/></svg>
+            <svg class="w-3.5 h-3.5 text-textPrimary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 4a8 8 0 00-8 8c0 2.12.74 4.07 1.97 5.61L4 20l2.39-1.97A7.96 7.96 0 0012 20a8 8 0 100-16z"/></svg>
+            <div class="w-5 h-2.5 border border-textPrimary rounded-sm p-0.5 flex items-center">
+              <div class="h-full w-full bg-statusSuccess rounded-2xs"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dimmed Background Content (Simulating Backdrop Dim) -->
+        <div class="flex-1 opacity-25 filter blur-[0.5px] px-4 py-3 space-y-4 pointer-events-none select-none">
+          <div class="flex justify-between items-center pb-2 border-b border-mutedBorder">
+            <h2 class="text-xl font-bold">Today</h2>
+            <div class="w-8 h-8 rounded-full bg-accent"></div>
+          </div>
+          <div class="h-32 bg-surface rounded-card border border-mutedBorder"></div>
+          <div class="h-16 bg-surface rounded-card border border-mutedBorder"></div>
+          <div class="h-40 bg-surface rounded-card border border-mutedBorder"></div>
+        </div>
+
+        <!-- Sheet Modal Backdrop Overlay -->
+        <div class="absolute inset-0 bg-black/55 z-40 backdrop-blur-[1px] flex flex-col justify-end">
+
+          <!-- Bottom Sheet Container (#1E1B2E surface, rounded-t-2xl) -->
+          <div class="w-full bg-surface border-t border-mutedBorder rounded-t-[20px] shadow-sheet z-50 flex flex-col pt-3 animate-in fade-in duration-200">
+
+            <!-- Sheet Grabber Handle -->
+            <div class="w-9 h-1 bg-textTertiary/50 rounded-full mx-auto mb-3"></div>
+
+            <!-- Sheet Header -->
+            <div class="px-5 pb-3 flex items-center justify-between border-b border-mutedBorder/50">
+              <div class="flex items-center gap-2">
+                <div class="w-5 h-5 rounded-full bg-elevated border border-mutedBorder flex items-center justify-center">
+                  <!-- 4-point star tiny -->
+                  <svg class="w-3 h-3 text-highlight" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L14.2 9.8L22 12L14.2 14.2L12 22L9.8 14.2L2 12L9.8 9.8L12 2Z" />
+                  </svg>
+                </div>
+                <h3 class="text-sm font-semibold text-textPrimary tracking-tight">Quick Capture</h3>
+              </div>
+              <button class="w-6 h-6 rounded-full bg-elevated flex items-center justify-center text-textTertiary hover:text-textPrimary" aria-label="Close sheet">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            <!-- Form Content -->
+            <div class="px-5 py-4 space-y-3.5">
+              <!-- Active Input Field with #9D8DF1 Focus Ring -->
+              <div class="relative">
+                <textarea 
+                  rows="3" 
+                  class="w-full bg-obsidian border border-mutedBorder rounded-card p-3 text-sm text-textPrimary placeholder:text-textTertiary outline-none ring-2 ring-highlight ring-offset-2 ring-offset-surface resize-none leading-relaxed" 
+                  placeholder="What's on your mind?">Schedule sync with infrastructure team regarding edge gateway latency |</textarea>
+                <!-- Blinking Caret Simulation -->
+                <div class="absolute right-3 bottom-3 flex items-center gap-1.5 text-[11px] font-mono-tabular text-textTertiary">
+                  <span>68 chars</span>
+                </div>
+              </div>
+
+              <!-- Quick Tag suggestions (Life area / Project) -->
+              <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs font-mono-tabular">
+                <button class="px-2 py-1 rounded bg-elevated border border-mutedBorder text-textSecondary flex items-center gap-1 hover:border-highlight">
+                  <span class="text-highlight">#</span> Infra 2025
+                </button>
+                <button class="px-2 py-1 rounded bg-elevated border border-mutedBorder text-textSecondary flex items-center gap-1 hover:border-highlight">
+                  <span class="text-statusWarning">!</span> P1 Urgent
+                </button>
+                <button class="px-2 py-1 rounded bg-elevated border border-mutedBorder text-textSecondary flex items-center gap-1 hover:border-highlight">
+                  <span>@</span> Today
+                </button>
+              </div>
+
+              <!-- Primary Submit Button -->
+              <button class="w-full h-11 bg-accent hover:bg-accentHover active:scale-[0.99] text-textPrimary rounded-DEFAULT font-medium text-sm flex items-center justify-center gap-2 border border-highlight/40 shadow-sm transition-all">
+                <svg class="w-4 h-4 text-highlight" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span>Add to Inbox</span>
+              </button>
+            </div>
+
+            <!-- Implied On-Screen iOS Keyboard Area -->
+            <div class="bg-[#151320] border-t border-mutedBorder/80 px-1.5 pt-2 pb-5 flex flex-col gap-2 select-none">
+              <!-- Keyboard Predictive Bar -->
+              <div class="h-8 flex items-center justify-around border-b border-mutedBorder/40 text-xs text-textSecondary font-sans px-3">
+                <span class="text-textPrimary font-medium">"infrastructure"</span>
+                <span class="border-x border-mutedBorder/50 px-4">latency</span>
+                <span>today</span>
+              </div>
+
+              <!-- Key Rows Representation (Subtle, architectural dark keys) -->
+              <div class="space-y-1.5 px-1 pt-1">
+                <!-- Row 1 -->
+                <div class="flex justify-center gap-1.5 text-xs font-sans text-textPrimary">
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">Q</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">W</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">E</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">R</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">T</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">Y</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">U</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">I</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">O</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">P</span>
+                </div>
+                <!-- Row 2 -->
+                <div class="flex justify-center gap-1.5 text-xs font-sans text-textPrimary px-2">
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">A</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">S</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">D</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">F</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">G</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">H</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">J</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">K</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">L</span>
+                </div>
+                <!-- Row 3 -->
+                <div class="flex justify-center gap-1.5 text-xs font-sans text-textPrimary">
+                  <span class="w-10 h-9 rounded bg-[#1e1b2e] border border-mutedBorder/60 flex items-center justify-center text-textSecondary">⇧</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">Z</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">X</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">C</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">V</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">B</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">N</span>
+                  <span class="w-[30px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center shadow-xs">M</span>
+                  <span class="w-10 h-9 rounded bg-[#1e1b2e] border border-mutedBorder/60 flex items-center justify-center text-textSecondary">⌫</span>
+                </div>
+                <!-- Row 4 (Space & Actions) -->
+                <div class="flex justify-center gap-1.5 text-xs font-sans text-textPrimary pt-0.5">
+                  <span class="w-12 h-9 rounded bg-[#1e1b2e] border border-mutedBorder/60 flex items-center justify-center text-textSecondary text-[11px]">123</span>
+                  <span class="w-8 h-9 rounded bg-[#1e1b2e] border border-mutedBorder/60 flex items-center justify-center text-textSecondary">🌐</span>
+                  <span class="flex-1 max-w-[170px] h-9 rounded bg-[#272338] border border-mutedBorder/60 flex items-center justify-center text-[11px] text-textSecondary">space</span>
+                  <span class="w-14 h-9 rounded bg-accent border border-highlight/40 flex items-center justify-center text-textPrimary font-medium text-[11px]">return</span>
+                </div>
+              </div>
+
+              <!-- Home Indicator -->
+              <div class="h-3 flex justify-center items-center pt-2">
+                <div class="w-32 h-1 bg-textSecondary/30 rounded-full"></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Technical Spec & Implementation Notes -->
+  <footer class="w-full max-w-[880px] mt-10 p-4 rounded-card bg-surface border border-mutedBorder text-xs text-textSecondary space-y-2">
+    <div class="flex items-center justify-between text-textPrimary font-medium">
+      <span class="flex items-center gap-1.5 font-mono-tabular">
+        <span class="w-2 h-2 rounded-full bg-highlight"></span>
+        NORTHSTAR MOBILE OS SPECIFICATION (390×844)
+      </span>
+      <span class="font-mono-tabular text-textTertiary">v2.4.1 COMPLIANT</span>
+    </div>
+    <p class="leading-relaxed">
+      Crafted with strict adherence to the Northstar dark-architectural tokens: Obsidian base (<code class="text-textPrimary">#121019</code>), Panel surface (<code class="text-textPrimary">#1E1B2E</code>), Elevated cards (<code class="text-textPrimary">#262238</code>), Border outlines (<code class="text-textPrimary">#40375C</code>), and Bright Violet highlights (<code class="text-highlight">#9D8DF1</code>). Touch targets strictly comply with minimum <code class="text-textPrimary">44px</code> guidelines (with Big Three rows exceeding <code class="text-textPrimary">56px</code>).
+    </p>
+  </footer>
+
+</body>
+</html>

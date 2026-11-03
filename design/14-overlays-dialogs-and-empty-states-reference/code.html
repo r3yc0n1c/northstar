@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Northstar — Overlays, Dialogs & Empty States Architecture</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            canvas: '#121019',
+            surface: {
+              DEFAULT: '#14121b',
+              plane1: '#1E1B2E',
+              plane2: '#262238',
+              plane3: '#2F2B45',
+            },
+            border: {
+              subtle: '#2E2744',
+              strong: '#40375C',
+              highlight: '#5A4F7C',
+            },
+            accent: {
+              primary: '#5A4F7C',
+              violet: '#9D8DF1',
+              violetGlow: 'rgba(157, 141, 241, 0.15)',
+            },
+            semantic: {
+              success: '#6FCF97',
+              warning: '#E8B866',
+              danger: '#E5767F',
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"IBM Plex Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #121019;
+      color: #ECE8F6;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #14121b;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #40375C;
+      border-radius: 3px;
+    }
+    .kbd-chip {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      background: #14121b;
+      border: 1px solid #40375C;
+      color: #9D8DF1;
+      padding: 2px 6px;
+      border-radius: 4px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body class="w-[1440px] min-h-[900px] bg-canvas text-[#ECE8F6] p-8 box-border flex flex-col gap-6 custom-scrollbar">
+
+  <!-- Top System Header Bar -->
+  <header class="flex items-center justify-between pb-5 border-b border-border-strong">
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-7 h-7 rounded bg-surface-plane2 border border-accent-violet flex items-center justify-center text-accent-violet font-semibold text-sm">
+          ✦
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs uppercase tracking-widest font-mono text-[#8C829E]">SPEC-REF // SYS.OVERLAYS.v2.4</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-semantic-success"></span>
+            <span class="text-[11px] font-mono text-semantic-success">ACTIVE RUNTIME TOKENS</span>
+          </div>
+          <h1 class="text-xl font-bold tracking-tight text-[#ECE8F6] flex items-center gap-2">
+            Northstar Core Overlays, Dialogs & Empty States Reference
+          </h1>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry badge strip -->
+    <div class="flex items-center gap-3">
+      <div class="px-3 py-1.5 rounded bg-surface-plane1 border border-border-strong flex items-center gap-2 text-xs font-mono text-[#A39FB8]">
+        <span class="text-[#8C829E]">SURFACE:</span>
+        <span class="text-accent-violet">#1E1B2E (PLANE 1)</span>
+      </div>
+      <div class="px-3 py-1.5 rounded bg-surface-plane1 border border-border-strong flex items-center gap-2 text-xs font-mono text-[#A39FB8]">
+        <span class="text-[#8C829E]">GRID:</span>
+        <span class="text-[#ECE8F6]">4PX ARCHITECTURAL</span>
+      </div>
+      <div class="px-3 py-1.5 rounded bg-surface-plane1 border border-border-strong flex items-center gap-2 text-xs font-mono text-[#A39FB8]">
+        <span class="text-[#8C829E]">VIEWPORT:</span>
+        <span class="text-[#ECE8F6]">1440 × 900 MATRIX</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Reference Grid (Sections 1-7) -->
+  <main class="grid grid-cols-12 gap-6 items-start">
+
+    <!-- ========================================================= -->
+    <!-- COLUMN 1 (SPAN 5): Modals (Quick Capture + Objective + Key Result) -->
+    <!-- ========================================================= -->
+    <div class="col-span-5 flex flex-col gap-6">
+
+      <!-- SECTION 1: Quick Capture Dialog -->
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center justify-between text-xs font-mono text-[#8C829E]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 bg-accent-violet rounded-full"></span>
+            01 // QUICK CAPTURE DIALOG (520PX MODAL)
+          </span>
+          <span>CENTERED ELEVATION</span>
+        </div>
+
+        <div class="w-full bg-surface-plane1 rounded-lg border border-border-strong shadow-2xl p-5 flex flex-col gap-4 relative">
+          <!-- Modal Top Indicator -->
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-accent-violet" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span class="text-xs font-medium text-[#8C829E] tracking-wider uppercase font-mono">Capture Node</span>
+            </div>
+            <span class="kbd-chip">ESC</span>
+          </div>
+
+          <!-- Input field with active focus glow -->
+          <div class="relative">
+            <input 
+              type="text" 
+              value="Refactor distributed ingress telemetry RFC v2"
+              class="w-full bg-[#121019] text-[#ECE8F6] text-base placeholder-[#5A5370] px-4 py-3 rounded border-2 border-accent-violet ring-2 ring-accent-violet/20 outline-none font-sans font-medium transition"
+              placeholder="What do you need to do?"
+            />
+          </div>
+
+          <!-- Modal Footer -->
+          <div class="flex items-center justify-between pt-1">
+            <div class="flex items-center gap-3 text-xs text-[#8C829E]">
+              <span class="flex items-center gap-1.5">
+                <span class="kbd-chip">↵</span>
+                <span>Enter to add</span>
+              </span>
+              <span class="text-border-strong">·</span>
+              <span class="flex items-center gap-1.5">
+                <span class="kbd-chip">ESC</span>
+                <span>Esc to close</span>
+              </span>
+            </div>
+
+            <button class="text-xs font-medium text-accent-violet hover:text-[#B8ACFF] transition flex items-center gap-1">
+              <span>Add details</span>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: New Objective Dialog -->
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center justify-between text-xs font-mono text-[#8C829E]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 bg-accent-violet rounded-full"></span>
+            02 // NEW OBJECTIVE DIALOG
+          </span>
+          <span>STRATEGIC INTENT FORM</span>
+        </div>
+
+        <div class="w-full bg-surface-plane1 rounded-lg border border-border-strong shadow-xl p-5 flex flex-col gap-4">
+          <!-- Header -->
+          <div class="flex items-center justify-between border-b border-border-subtle pb-3">
+            <div>
+              <h2 class="text-sm font-semibold text-[#ECE8F6]">Draft New Objective</h2>
+              <p class="text-xs text-[#8C829E] mt-0.5">Anchors high-level qualitative horizon outcomes</p>
+            </div>
+            <button class="text-[#8C829E] hover:text-[#ECE8F6] p-1 rounded hover:bg-surface-plane2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Form Fields -->
+          <div class="flex flex-col gap-3.5">
+            <!-- Objective Title -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-medium text-[#A39FB8] flex items-center justify-between">
+                <span>Objective Statement</span>
+                <span class="text-[11px] font-mono text-accent-violet">QUALITATIVE</span>
+              </label>
+              <input 
+                type="text" 
+                value="Scale high-throughput personal operating engine"
+                class="w-full bg-[#121019] text-xs text-[#ECE8F6] px-3 py-2 rounded border border-border-strong focus:border-accent-violet focus:ring-1 focus:ring-accent-violet outline-none"
+              />
+            </div>
+
+            <!-- Goal select (Optional) & Cycle Select -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-medium text-[#A39FB8]">Goal <span class="text-[#8C829E] font-normal">(Optional)</span></label>
+                <div class="relative">
+                  <select class="w-full bg-[#121019] text-xs text-[#ECE8F6] px-3 py-2 rounded border border-border-strong appearance-none outline-none cursor-pointer focus:border-accent-violet">
+                    <option>Career Mastery & Leadership</option>
+                    <option>Technical Sovereignty</option>
+                    <option>Vitality & Energy Reserve</option>
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-[#8C829E]">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-medium text-[#A39FB8]">Cadence Cycle</label>
+                <div class="relative">
+                  <select class="w-full bg-[#121019] text-xs text-[#ECE8F6] px-3 py-2 rounded border border-border-strong appearance-none outline-none cursor-pointer focus:border-accent-violet">
+                    <option>Q4 2026 (Oct – Dec)</option>
+                    <option>Q1 2027 (Jan – Mar)</option>
+                    <option>Annual Horizon 2027</option>
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-[#8C829E]">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Priority & Confidence Matrix -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-medium text-[#A39FB8]">Priority Tier</label>
+                <div class="flex items-center gap-1.5 bg-[#121019] p-1 rounded border border-border-strong">
+                  <button class="flex-1 text-[11px] font-mono py-1 rounded bg-semantic-danger/20 text-semantic-danger border border-semantic-danger/40 font-semibold">P1</button>
+                  <button class="flex-1 text-[11px] font-mono py-1 rounded text-[#8C829E] hover:text-[#ECE8F6]">P2</button>
+                  <button class="flex-1 text-[11px] font-mono py-1 rounded text-[#8C829E] hover:text-[#ECE8F6]">P3</button>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-medium text-[#A39FB8] flex items-center justify-between">
+                  <span>Confidence</span>
+                  <span class="text-[11px] font-mono text-accent-violet">8 / 10</span>
+                </label>
+                <div class="h-8 bg-[#121019] border border-border-strong rounded px-2.5 flex items-center gap-2">
+                  <input type="range" min="1" max="10" value="8" class="w-full accent-[#9D8DF1] cursor-pointer" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Target Dates Window -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-medium text-[#A39FB8]">Execution Window</label>
+              <div class="grid grid-cols-2 gap-2 font-mono text-xs">
+                <div class="bg-[#121019] border border-border-strong rounded px-3 py-2 text-[#ECE8F6] flex items-center justify-between">
+                  <span class="text-[#8C829E] text-[11px]">START</span>
+                  <span>2026-10-01</span>
+                </div>
+                <div class="bg-[#121019] border border-border-strong rounded px-3 py-2 text-[#ECE8F6] flex items-center justify-between">
+                  <span class="text-[#8C829E] text-[11px]">END</span>
+                  <span>2026-12-31</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-border-subtle">
+            <button class="px-3.5 py-1.5 rounded text-xs text-[#A39FB8] hover:text-[#ECE8F6] border border-transparent hover:border-border-strong transition">
+              Cancel
+            </button>
+            <button class="px-4 py-1.5 rounded bg-accent-primary hover:bg-[#6c5f95] text-xs font-medium text-[#ECE8F6] border border-accent-violet transition shadow-sm">
+              Create Objective
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: New Key Result Dialog (With Validation Error) -->
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center justify-between text-xs font-mono text-[#8C829E]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 bg-accent-violet rounded-full"></span>
+            03 // NEW KEY RESULT DIALOG (VALIDATION STATE)
+          </span>
+          <span>TELEMETRY METRICS</span>
+        </div>
+
+        <div class="w-full bg-surface-plane1 rounded-lg border border-border-strong shadow-xl p-5 flex flex-col gap-4">
+          <div class="flex items-center justify-between border-b border-border-subtle pb-3">
+            <div>
+              <h2 class="text-sm font-semibold text-[#ECE8F6]">Attach Quantitative Key Result</h2>
+              <p class="text-xs text-[#8C829E] mt-0.5">Measurable metric progression</p>
+            </div>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-surface-plane2 text-accent-violet border border-border-strong">KR-SPEC</span>
+          </div>
+
+          <div class="flex flex-col gap-3.5">
+            <!-- KR Title -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-medium text-[#A39FB8]">Metric Statement</label>
+              <input 
+                type="text" 
+                value="Publish technical RFCs and architecture whitepapers"
+                class="w-full bg-[#121019] text-xs text-[#ECE8F6] px-3 py-2 rounded border border-border-strong focus:border-accent-violet outline-none"
+              />
+            </div>
+
+            <!-- Type & Direction Segmented Controls -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-medium text-[#A39FB8]">Measurement Mode</label>
+                <div class="grid grid-cols-2 bg-[#121019] p-1 rounded border border-border-strong text-xs font-medium">
+                  <button class="py-1 rounded bg-surface-plane2 text-accent-violet text-center border border-accent-violet/30 font-mono text-[11px]">Numeric</button>
+                  <button class="py-1 text-[#8C829E] hover:text-[#ECE8F6] text-center font-mono text-[11px]">Binary</button>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-medium text-[#A39FB8]">Trajectory Vector</label>
+                <div class="grid grid-cols-2 bg-[#121019] p-1 rounded border border-border-strong text-xs font-medium">
+                  <button class="py-1 rounded bg-surface-plane2 text-[#ECE8F6] text-center border border-accent-violet/30 font-mono text-[11px] flex items-center justify-center gap-1">
+                    <span>↑</span> Increase
+                  </button>
+                  <button class="py-1 text-[#8C829E] hover:text-[#ECE8F6] text-center font-mono text-[11px] flex items-center justify-center gap-1">
+                    <span>↓</span> Decrease
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Monospace Numeric Fields (Baseline, Current, Target) -->
+            <div class="grid grid-cols-3 gap-2">
+              <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-mono text-[#8C829E]">BASELINE</label>
+                <input 
+                  type="text" 
+                  value="4.00" 
+                  class="bg-[#121019] text-xs font-mono text-[#ECE8F6] px-2.5 py-1.5 rounded border border-border-strong text-center"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-mono text-[#8C829E]">CURRENT</label>
+                <input 
+                  type="text" 
+                  value="4.00" 
+                  class="bg-[#121019] text-xs font-mono text-accent-violet px-2.5 py-1.5 rounded border border-border-strong text-center"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-mono text-semantic-danger flex items-center justify-between">
+                  <span>TARGET</span>
+                  <span>!</span>
+                </label>
+                <input 
+                  type="text" 
+                  value="4.00" 
+                  class="bg-[#121019] text-xs font-mono text-semantic-danger px-2.5 py-1.5 rounded border-2 border-semantic-danger text-center ring-1 ring-semantic-danger/30"
+                />
+              </div>
+            </div>
+
+            <!-- Target validation error message -->
+            <div class="px-2.5 py-1.5 rounded bg-semantic-danger/10 border border-semantic-danger/40 flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 text-semantic-danger shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <span class="text-[11px] font-mono text-semantic-danger">Target must be different from the baseline.</span>
+            </div>
+
+            <!-- Unit & Optional Currency -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-[#A39FB8]">Unit Specifier</label>
+                <input 
+                  type="text" 
+                  value="RFC Documents" 
+                  class="bg-[#121019] text-xs text-[#ECE8F6] px-3 py-1.5 rounded border border-border-strong"
+                />
+              </div>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-[#A39FB8]">Currency <span class="text-[#8C829E] font-normal">(Optional)</span></label>
+                <select class="bg-[#121019] text-xs text-[#8C829E] px-3 py-1.5 rounded border border-border-strong appearance-none">
+                  <option>None (Metric Count)</option>
+                  <option>USD ($)</option>
+                  <option>INR (₹)</option>
+                  <option>EUR (€)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dialog footer -->
+          <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-border-subtle">
+            <button class="px-3.5 py-1.5 rounded text-xs text-[#A39FB8] hover:text-[#ECE8F6]">Cancel</button>
+            <button disabled class="px-4 py-1.5 rounded bg-surface-plane2 text-xs font-medium text-[#8C829E] border border-border-strong cursor-not-allowed">
+              Save Key Result
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- COLUMN 2 (SPAN 4): Sheets & Confirmations (Carry-Over + Delete Task) -->
+    <!-- ========================================================= -->
+    <div class="col-span-4 flex flex-col gap-6">
+
+      <!-- SECTION 5: Carry-over sheet -->
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center justify-between text-xs font-mono text-[#8C829E]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 bg-accent-violet rounded-full"></span>
+            05 // CARRY-OVER TRIAGE SHEET
+          </span>
+          <span>DAILY TRANSITION</span>
+        </div>
+
+        <div class="w-full bg-surface-plane1 rounded-lg border border-border-strong shadow-xl p-5 flex flex-col gap-4">
+          <div class="flex items-center justify-between border-b border-border-subtle pb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm font-semibold text-[#ECE8F6]">Unfinished Tasks from Yesterday</h2>
+                <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-surface-plane2 text-accent-violet border border-border-strong">3 Pending</span>
+              </div>
+              <p class="text-xs text-[#8C829E] mt-0.5">Consciously allocate or clear incomplete cadence loops.</p>
+            </div>
+          </div>
+
+          <!-- 3 Earlier tasks list -->
+          <div class="flex flex-col gap-3">
+            <!-- Task 1 -->
+            <div class="p-3 bg-[#121019] rounded border border-border-strong flex flex-col gap-2.5">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-semantic-warning"></span>
+                  <span class="text-xs font-medium text-[#ECE8F6]">Review payload compression bench specs</span>
+                </div>
+                <span class="text-[10px] font-mono text-[#8C829E]">D-1</span>
+              </div>
+              <div class="grid grid-cols-3 gap-1 bg-surface-plane1 p-1 rounded border border-border-subtle">
+                <button class="py-1 rounded bg-accent-primary text-accent-violet text-[11px] font-medium border border-accent-violet/40">Move to today</button>
+                <button class="py-1 rounded text-[#8C829E] hover:text-[#ECE8F6] text-[11px]">Reschedule</button>
+                <button class="py-1 rounded text-[#8C829E] hover:text-[#ECE8F6] text-[11px]">Leave</button>
+              </div>
+            </div>
+
+            <!-- Task 2 -->
+            <div class="p-3 bg-[#121019] rounded border border-border-strong flex flex-col gap-2.5">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-semantic-danger"></span>
+                  <span class="text-xs font-medium text-[#ECE8F6]">Prepare RFC slide deck for staff committee</span>
+                </div>
+                <span class="text-[10px] font-mono text-[#8C829E]">P1 · D-2</span>
+              </div>
+              <div class="grid grid-cols-3 gap-1 bg-surface-plane1 p-1 rounded border border-border-subtle">
+                <button class="py-1 rounded text-[#8C829E] hover:text-[#ECE8F6] text-[11px]">Move to today</button>
+                <button class="py-1 rounded bg-surface-plane2 text-[#ECE8F6] text-[11px] font-medium border border-border-strong">Reschedule</button>
+                <button class="py-1 rounded text-[#8C829E] hover:text-[#ECE8F6] text-[11px]">Leave</button>
+              </div>
+            </div>
+
+            <!-- Task 3 -->
+            <div class="p-3 bg-[#121019] rounded border border-border-strong flex flex-col gap-2.5">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-[#8C829E]"></span>
+                  <span class="text-xs font-medium text-[#A39FB8]">Order ergonomic split keyboard keycaps</span>
+                </div>
+                <span class="text-[10px] font-mono text-[#8C829E]">D-3</span>
+              </div>
+              <div class="grid grid-cols-3 gap-1 bg-surface-plane1 p-1 rounded border border-border-subtle">
+                <button class="py-1 rounded text-[#8C829E] hover:text-[#ECE8F6] text-[11px]">Move to today</button>
+                <button class="py-1 rounded text-[#8C829E] hover:text-[#ECE8F6] text-[11px]">Reschedule</button>
+                <button class="py-1 rounded bg-surface-plane2 text-semantic-warning text-[11px] font-medium border border-border-strong">Leave</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Batch Action Footer -->
+          <div class="flex items-center justify-between pt-2 border-t border-border-subtle">
+            <span class="text-[11px] font-mono text-[#8C829E]">3 OF 3 TRIAGED</span>
+            <button class="px-4 py-1.5 rounded bg-accent-primary hover:bg-[#6c5f95] text-xs font-medium text-[#ECE8F6] border border-accent-violet transition">
+              Apply Decisions
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: Delete parent task confirmation -->
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center justify-between text-xs font-mono text-[#8C829E]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 bg-semantic-danger rounded-full"></span>
+            04 // DESTRUCTIVE CONFIRMATION MODAL
+          </span>
+          <span>PARENT TASK CASCADE</span>
+        </div>
+
+        <div class="w-full bg-surface-plane1 rounded-lg border border-border-strong shadow-xl p-5 flex flex-col gap-4">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 rounded bg-semantic-danger/10 border border-semantic-danger/40 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-semantic-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-sm font-semibold text-[#ECE8F6]">Delete Parent Task?</h2>
+              <p class="text-xs text-semantic-warning mt-0.5 font-mono">This task has 3 subtasks.</p>
+            </div>
+          </div>
+
+          <!-- Radio Choices -->
+          <div class="flex flex-col gap-2.5 bg-[#121019] p-3 rounded border border-border-strong">
+            <label class="flex items-start gap-2.5 cursor-pointer group">
+              <input type="radio" name="delete_scope" class="mt-0.5 accent-[#9D8DF1]" checked />
+              <div class="flex flex-col">
+                <span class="text-xs text-[#ECE8F6] font-medium group-hover:text-accent-violet transition">
+                  Delete only this task
+                </span>
+                <span class="text-[11px] text-[#8C829E]">Subtasks become top-level in your current project.</span>
+              </div>
+            </label>
+
+            <div class="h-px bg-border-subtle my-0.5"></div>
+
+            <label class="flex items-start gap-2.5 cursor-pointer group">
+              <input type="radio" name="delete_scope" class="mt-0.5 accent-[#9D8DF1]" />
+              <div class="flex flex-col">
+                <span class="text-xs text-[#ECE8F6] font-medium group-hover:text-semantic-danger transition">
+                  Delete task and subtasks
+                </span>
+                <span class="text-[11px] text-[#8C829E]">Permanently removes all 3 nested execution items.</span>
+              </div>
+            </label>
+          </div>
+
+          <!-- Modal Actions -->
+          <div class="flex items-center justify-end gap-2.5 pt-1">
+            <button class="px-3.5 py-1.5 rounded text-xs text-[#A39FB8] hover:text-[#ECE8F6] border border-border-strong hover:bg-surface-plane2 transition">
+              Cancel
+            </button>
+            <button class="px-4 py-1.5 rounded bg-semantic-danger/20 hover:bg-semantic-danger/30 text-xs font-semibold text-semantic-danger border border-semantic-danger/60 transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+              <span>Delete Task</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- COLUMN 3 (SPAN 3): Empty States Cards + Toast Matrix -->
+    <!-- ========================================================= -->
+    <div class="col-span-3 flex flex-col gap-6">
+
+      <!-- SECTION 6: Empty States Matrix -->
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center justify-between text-xs font-mono text-[#8C829E]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 bg-accent-violet rounded-full"></span>
+            06 // EMPTY STATES (4 CORE VIEWS)
+          </span>
+          <span>ZERO-DATA CARDS</span>
+        </div>
+
+        <div class="flex flex-col gap-3">
+
+          <!-- Empty State: Today with no plan -->
+          <div class="bg-surface-plane1 rounded-lg border border-border-strong p-4 flex flex-col items-center text-center gap-2.5">
+            <div class="w-9 h-9 rounded-full bg-surface-plane2 border border-border-strong flex items-center justify-center text-accent-violet">
+              <!-- Calendar / Sun Line Icon -->
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xs font-semibold text-[#ECE8F6]">No focus plan for today</h3>
+              <p class="text-[11px] text-[#8C829E] mt-0.5 leading-snug">Design your day with intentional Big Three outcomes.</p>
+            </div>
+            <button class="w-full py-1.5 rounded bg-accent-primary hover:bg-[#6c5f95] text-xs font-medium text-[#ECE8F6] border border-accent-violet transition">
+              Plan Today
+            </button>
+          </div>
+
+          <!-- Empty State: Goals with no objectives -->
+          <div class="bg-surface-plane1 rounded-lg border border-border-strong p-4 flex flex-col items-center text-center gap-2.5">
+            <div class="w-9 h-9 rounded-full bg-surface-plane2 border border-border-strong flex items-center justify-center text-accent-violet">
+              <!-- Target Line Icon -->
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xs font-semibold text-[#ECE8F6]">No active horizon objectives</h3>
+              <p class="text-[11px] text-[#8C829E] mt-0.5 leading-snug">Anchor strategic intent with quarterly measurable key results.</p>
+            </div>
+            <button class="w-full py-1.5 rounded bg-accent-primary hover:bg-[#6c5f95] text-xs font-medium text-[#ECE8F6] border border-accent-violet transition">
+              Create Objective
+            </button>
+          </div>
+
+          <!-- Empty State: Projects empty -->
+          <div class="bg-surface-plane1 rounded-lg border border-border-strong p-4 flex flex-col items-center text-center gap-2.5">
+            <div class="w-9 h-9 rounded-full bg-surface-plane2 border border-border-strong flex items-center justify-center text-accent-violet">
+              <!-- Folder Line Icon -->
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xs font-semibold text-[#ECE8F6]">No active projects</h3>
+              <p class="text-[11px] text-[#8C829E] mt-0.5 leading-snug">Group milestones and related execution tasks into a unified initiative.</p>
+            </div>
+            <button class="w-full py-1.5 rounded bg-accent-primary hover:bg-[#6c5f95] text-xs font-medium text-[#ECE8F6] border border-accent-violet transition">
+              New Project
+            </button>
+          </div>
+
+          <!-- Empty State: Habits empty -->
+          <div class="bg-surface-plane1 rounded-lg border border-border-strong p-4 flex flex-col items-center text-center gap-2.5">
+            <div class="w-9 h-9 rounded-full bg-surface-plane2 border border-border-strong flex items-center justify-center text-accent-violet">
+              <!-- Repeat / Sync Line Icon -->
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xs font-semibold text-[#ECE8F6]">No daily habits tracked</h3>
+              <p class="text-[11px] text-[#8C829E] mt-0.5 leading-snug">Build automatic momentum with recurring daily protocols.</p>
+            </div>
+            <button class="w-full py-1.5 rounded bg-accent-primary hover:bg-[#6c5f95] text-xs font-medium text-[#ECE8F6] border border-accent-violet transition">
+              Add First Habit
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SECTION 7: Toast Notifications -->
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center justify-between text-xs font-mono text-[#8C829E]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 bg-accent-violet rounded-full"></span>
+            07 // TRANSIENT TOAST NOTIFICATIONS
+          </span>
+          <span>POPUP NOTICES</span>
+        </div>
+
+        <div class="flex flex-col gap-2.5">
+
+          <!-- Toast 1: Task completed with Undo -->
+          <div class="bg-surface-plane2 border border-border-strong rounded px-3.5 py-2.5 shadow-2xl flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2 h-2 rounded-full bg-semantic-success"></span>
+              <span class="text-xs text-[#ECE8F6] font-medium">Task completed.</span>
+            </div>
+            <button class="text-xs font-mono text-accent-violet hover:underline flex items-center gap-1">
+              <span>Undo</span>
+              <span class="kbd-chip text-[9px] px-1 py-0.2">⌘Z</span>
+            </button>
+          </div>
+
+          <!-- Toast 2: Saved -->
+          <div class="bg-surface-plane2 border border-border-strong rounded px-3.5 py-2.5 shadow-2xl flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-semantic-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              <span class="text-xs text-[#ECE8F6] font-medium">Saved</span>
+            </div>
+            <span class="text-[10px] font-mono text-[#8C829E]">SYNC NOMINAL</span>
+          </div>
+
+          <!-- Toast 3: Error toast "Couldn't save. Retry" -->
+          <div class="bg-surface-plane2 border border-semantic-danger/60 rounded px-3.5 py-2.5 shadow-2xl flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-semantic-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-xs text-semantic-danger font-medium">Couldn't save.</span>
+            </div>
+            <button class="text-xs font-mono text-semantic-danger hover:underline font-semibold flex items-center gap-1">
+              <span>Retry</span>
+              <span class="kbd-chip text-[9px] px-1 py-0.2 text-semantic-danger border-semantic-danger/50">R</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Footnote Specification Status -->
+  <footer class="pt-4 mt-auto border-t border-border-subtle flex items-center justify-between text-xs font-mono text-[#8C829E]">
+    <div class="flex items-center gap-3">
+      <span>NORTHSTAR UI KIT // COMPONENT CATALOG: 7 ATOMIC PATTERNS</span>
+      <span>•</span>
+      <span>ZERO GLASSMORPHISM</span>
+      <span>•</span>
+      <span>STRICT AUDIT CONTRAST & ACCESSIBILITY</span>
+    </div>
+    <div class="flex items-center gap-2 text-accent-violet">
+      <span>ALL STATES RENDERED VERBATIM</span>
+    </div>
+  </footer>
+
+</body>
+</html>
