@@ -160,4 +160,27 @@ describe('SignInForm component', () => {
       expect(screen.getByText('Projects Deep Destination')).toBeInTheDocument();
     });
   });
+
+  it('handles Google sign in action and displays error on failure (FR-AUTH-4)', async () => {
+    const googleSpy = vi.spyOn(authApi, 'signInWithGoogle').mockResolvedValueOnce({
+      data: null,
+      error: 'Google OAuth initialization failed',
+    });
+
+    render(
+      <AuthProvider initialSession={null} initialLoading={false}>
+        <MemoryRouter>
+          <SignInForm />
+        </MemoryRouter>
+      </AuthProvider>,
+    );
+
+    const googleBtn = screen.getByRole('button', { name: /continue with google/i });
+    fireEvent.click(googleBtn);
+
+    expect(googleSpy).toHaveBeenCalledTimes(1);
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /google oauth initialization failed/i,
+    );
+  });
 });

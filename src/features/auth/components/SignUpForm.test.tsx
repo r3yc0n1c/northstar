@@ -96,4 +96,19 @@ describe('SignUpForm component', () => {
       expect(onSuccess).toHaveBeenCalledWith('user@example.com');
     });
   });
+
+  it('triggers Google OAuth and displays error on failure (FR-AUTH-4)', async () => {
+    vi.mocked(authApi.signInWithGoogle).mockResolvedValueOnce({
+      data: null,
+      error: 'Google authentication aborted',
+    });
+
+    renderComponent();
+
+    const googleBtn = screen.getByRole('button', { name: /continue with google/i });
+    fireEvent.click(googleBtn);
+
+    expect(authApi.signInWithGoogle).toHaveBeenCalledTimes(1);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/google authentication aborted/i);
+  });
 });
