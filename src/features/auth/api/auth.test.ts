@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import type { User } from '@supabase/supabase-js';
+import { AuthError, type User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import {
   signInWithGoogle,
@@ -43,7 +43,7 @@ describe('Auth API Layer', () => {
     it('returns error message if Google OAuth fails to initiate', async () => {
       vi.spyOn(supabase.auth, 'signInWithOAuth').mockResolvedValueOnce({
         data: { provider: 'google', url: null },
-        error: { name: 'AuthError', message: 'Popup blocked by browser', status: 400 },
+        error: new AuthError('Popup blocked by browser', 400),
       });
 
       const res = await signInWithGoogle();
@@ -77,7 +77,7 @@ describe('Auth API Layer', () => {
     it('returns generic error on bad credentials to prevent enumeration', async () => {
       vi.spyOn(supabase.auth, 'signInWithPassword').mockResolvedValueOnce({
         data: { user: null, session: null },
-        error: { name: 'AuthApiError', message: 'Invalid login credentials', status: 400 },
+        error: new AuthError('Invalid login credentials', 400),
       });
 
       const res = await signInWithEmail('pilot@northstar.app', 'wrong-pass');
@@ -89,7 +89,7 @@ describe('Auth API Layer', () => {
     it('flags unconfirmed accounts for verification resend prompt', async () => {
       vi.spyOn(supabase.auth, 'signInWithPassword').mockResolvedValueOnce({
         data: { user: null, session: null },
-        error: { name: 'AuthApiError', message: 'Email not confirmed', status: 400 },
+        error: new AuthError('Email not confirmed', 400),
       });
 
       const res = await signInWithEmail('pilot@northstar.app', 'password');
@@ -143,7 +143,7 @@ describe('Auth API Layer', () => {
 
     it('resends verification email with /auth/verify redirect', async () => {
       const resendSpy = vi.spyOn(supabase.auth, 'resend').mockResolvedValueOnce({
-        data: {},
+        data: { user: null, session: null, messageId: null },
         error: null,
       });
 
