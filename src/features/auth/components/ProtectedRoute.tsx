@@ -17,7 +17,7 @@ export interface ProtectedRouteProps {
  *   to /auth/verify-required.
  */
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { session, user, loading } = useAuth();
+  const { session, user, loading, isInRecovery } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -37,7 +37,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/auth/sign-in" state={{ from: location }} replace />;
   }
 
-  // 2. Unverified email -> block access to all private routes (FR-AUTH-2)
+  // 2. In password recovery -> block access to all private routes until password is reset
+  if (isInRecovery) {
+    return <Navigate to="/auth/update-password" replace />;
+  }
+
+  // 3. Unverified email -> block access to all private routes (FR-AUTH-2)
   if (!user.email_confirmed_at) {
     return <Navigate to="/auth/verify-required" replace />;
   }

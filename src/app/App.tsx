@@ -8,6 +8,8 @@ import {
   PublicOnlyRoute,
   SignUpPage,
   SignInPage,
+  ResetPasswordPage,
+  UpdatePasswordPage,
   VerifyEmailLanding,
   VerifyRequiredPage,
 } from '@/features/auth';
@@ -39,6 +41,10 @@ export function App() {
                 <Route path="sign-in" element={<SignInPage />} />
                 <Route path="sign-up" element={<SignUpPage />} />
               </Route>
+
+              {/* Password Recovery Flow */}
+              <Route path="reset-password" element={<ResetPasswordPage />} />
+              <Route path="update-password" element={<UpdatePasswordPage />} />
 
               {/* Verification Callbacks & Gatekeeper */}
               <Route path="verify" element={<VerifyEmailLanding />} />

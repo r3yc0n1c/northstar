@@ -98,4 +98,28 @@ describe('ProtectedRoute', () => {
 
     expect(screen.getByText('Dashboard Content')).toBeInTheDocument();
   });
+
+  it('blocks user in recovery mode and redirects to /auth/update-password', () => {
+    const confirmedSession = makeMockSession(true);
+
+    render(
+      <AuthProvider
+        initialSession={confirmedSession}
+        initialLoading={false}
+        initialInRecovery={true}
+      >
+        <MemoryRouter initialEntries={['/today']}>
+          <Routes>
+            <Route path="/auth/update-password" element={<div>Update Password Screen</div>} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/today" element={<div>Dashboard Content</div>} />
+            </Route>
+          </Routes>
+        </MemoryRouter>
+      </AuthProvider>,
+    );
+
+    expect(screen.getByText('Update Password Screen')).toBeInTheDocument();
+    expect(screen.queryByText('Dashboard Content')).not.toBeInTheDocument();
+  });
 });

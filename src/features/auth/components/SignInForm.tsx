@@ -26,6 +26,7 @@ export function SignInForm() {
 
   // Return URL preserved from location.state.from (FR-AUTH-7)
   const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/today';
+  const statusMessage = (location.state as { message?: string })?.message;
 
   // Cooldown countdown timer for unverified resend
   useEffect(() => {
@@ -109,6 +110,16 @@ export function SignInForm() {
           Sign in to your personal operating system.
         </p>
       </div>
+
+      {/* Success Status Banner */}
+      {statusMessage && (
+        <div
+          className="mb-4 p-2.5 bg-success/10 border border-success text-success text-xs rounded-[6px]"
+          role="status"
+        >
+          {statusMessage}
+        </div>
+      )}
 
       {/* Google OAuth Button */}
       <button

@@ -134,3 +134,52 @@ export async function signInWithGoogle(): Promise<AuthResponse> {
     return { data: null, error: message };
   }
 }
+
+/**
+ * Requests a password reset recovery email.
+ * Per FR-AUTH-5:
+ * Always returns a success outcome to the caller regardless of whether
+ * the email exists in the system to prevent account enumeration.
+ */
+export async function requestPasswordReset(email: string): Promise<AuthResponse> {
+  try {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/update-password`,
+    });
+
+    if (error) {
+      if (error.status === 429) {
+        return {
+          data: null,
+          error: 'Too many requests. Please wait a moment before trying again.',
+        };
+      }
+    }
+
+    return { data, error: null };
+  } catch (_err) {
+    // Mask unexpected errors to prevent enumeration
+    return { data: null, error: null };
+  }
+}
+
+/**
+ * Updates the user's password using the active recovery session.
+ * Per FR-AUTH-5.
+ */
+export async function updateUserPassword(password: string): Promise<AuthResponse> {
+  try {
+    const { data, error } = await supabase.auth.updateUser({
+      password,
+    });
+
+    if (error) {
+      return { data: null, error: error.message };
+    }
+
+    return { data, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to update password';
+    return { data: null, error: message };
+  }
+}

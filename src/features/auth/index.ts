@@ -11,3 +11,5 @@ export * from './components/PublicOnlyRoute';
 export * from './pages/SignUpPage';
 export * from './pages/SignInPage';
 export * from './pages/VerifyRequiredPage';
+export * from './pages/ResetPasswordPage';
+export * from './pages/UpdatePasswordPage';

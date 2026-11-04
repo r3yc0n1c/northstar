@@ -18,6 +18,7 @@ supabase/.temp
 coverage/
 test-results/
 playwright-report/
+.vitest/
 
 # Internal Jira planning
 .plan/
