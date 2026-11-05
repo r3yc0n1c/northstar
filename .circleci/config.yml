@@ -1,0 +1,94 @@
+version: 2.1
+
+executors:
+  node-executor:
+    docker:
+      - image: cimg/node:24.22
+    working_directory: ~/project
+
+jobs:
+  verify:
+    executor: node-executor
+    steps:
+      - checkout
+
+      - run:
+          name: Install and configure pnpm
+          command: |
+            corepack disable 2>/dev/null || true
+            sudo rm -f /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/pn
+            rm -rf ~/.cache/node/corepack
+            (cd /tmp && sudo npm install -g pnpm@12.16.1)
+            pnpm --version
+            pnpm config set store-dir ~/.local/share/pnpm/store
+
+      - restore_cache:
+          name: Restore pnpm package cache
+          keys:
+            - pnpm-packages-v1-{{ checksum "pnpm-lock.yaml" }}
+            - pnpm-packages-v1-
+
+      - run:
+          name: Install dependencies (frozen lockfile)
+          command: pnpm install --frozen-lockfile
+
+      - save_cache:
+          name: Save pnpm package cache
+          key: pnpm-packages-v1-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.local/share/pnpm/store
+            - node_modules
+
+      - run:
+          name: Typecheck
+          command: pnpm typecheck
+
+      - run:
+          name: Lint
+          command: pnpm lint
+
+      - run:
+          name: Format check
+          command: pnpm format:check
+
+      - run:
+          name: Unit tests
+          command: pnpm test
+
+      - run:
+          name: Database test harness
+          command: pnpm test:db
+
+      - run:
+          name: Production build
+          command: pnpm build
+
+      - run:
+          name: Dependency audit
+          command: pnpm audit --prod || true
+
+      - run:
+          name: Secret scan (Gitleaks)
+          command: |
+            GITLEAKS_VERSION="8.21.2"
+            curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" | tar -xz -C /tmp
+            /tmp/gitleaks detect --verbose
+
+      - run:
+          name: Deploy to Cloudflare Pages (Preview on PR, Production on main)
+          command: |
+            if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+              if [ "$CIRCLE_BRANCH" = "main" ]; then
+                pnpm dlx wrangler pages deploy dist --project-name=northstar --branch=main
+              else
+                pnpm dlx wrangler pages deploy dist --project-name=northstar --branch="$CIRCLE_BRANCH"
+              fi
+            else
+              echo "CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID not set; skipping deployment."
+            fi
+
+workflows:
+  version: 2
+  pipeline:
+    jobs:
+      - verify
