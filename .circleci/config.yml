@@ -79,9 +79,9 @@ jobs:
           command: |
             if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
               if [ "$CIRCLE_BRANCH" = "main" ]; then
-                pnpm dlx wrangler pages deploy dist --project-name=northstar --branch=main
+                CI=true pnpm dlx --dir . --config.ignore-scripts=true wrangler pages deploy dist --project-name=northstar --branch=main
               else
-                pnpm dlx wrangler pages deploy dist --project-name=northstar --branch="$CIRCLE_BRANCH"
+                CI=true pnpm dlx --dir . --config.ignore-scripts=true wrangler pages deploy dist --project-name=northstar --branch="$CIRCLE_BRANCH"
               fi
             else
               echo "CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID not set; skipping deployment."
