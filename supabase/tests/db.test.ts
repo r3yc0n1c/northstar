@@ -11,6 +11,7 @@ describe('Database & RLS Schema Migrations', () => {
     expect(files).toContain('20261103000002_create_workspaces.sql');
     expect(files).toContain('20261103000003_functions_and_triggers.sql');
     expect(files).toContain('20261103000004_rls_policies.sql');
+    expect(files).toContain('20261104000001_validate_working_hours.sql');
   });
 
   it('defines the profiles table with constraints and checks', () => {
@@ -79,6 +80,22 @@ describe('Database & RLS Schema Migrations', () => {
     // Ensure no client insert or delete policies exist
     expect(content).not.toContain('for insert');
     expect(content).not.toContain('for delete');
+  });
+
+  it('defines validate_working_hours function with search_path and table constraint (FR-SET-3)', () => {
+    const content = fs.readFileSync(
+      path.join(migrationsDir, '20261104000001_validate_working_hours.sql'),
+      'utf-8',
+    );
+    expect(content).toContain('function public.validate_working_hours(wh jsonb)');
+    expect(content).toContain('security definer');
+    expect(content).toContain("set search_path = ''");
+    expect(content).toContain('alter table public.profiles');
+    expect(content).toContain('add constraint profiles_working_hours_valid');
+    expect(content).toContain('check (public.validate_working_hours(working_hours))');
+    expect(content).toContain(
+      'grant execute on function public.validate_working_hours(jsonb) to authenticated;',
+    );
   });
 
   it('documents the workspace RLS pattern and composite foreign key strategy in docs/rls.md', () => {
