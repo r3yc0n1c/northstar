@@ -23,6 +23,112 @@ export type Database = {
   };
   public: {
     Tables: {
+      domains: {
+        Row: {
+          archived_at: string | null;
+          color: string;
+          created_at: string;
+          icon: string;
+          id: string;
+          name: string;
+          sort_order: number;
+          updated_at: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          color?: string;
+          created_at?: string;
+          icon?: string;
+          id?: string;
+          name: string;
+          sort_order?: number;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          color?: string;
+          created_at?: string;
+          icon?: string;
+          id?: string;
+          name?: string;
+          sort_order?: number;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'domains_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      goals: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          description: string;
+          domain_id: string | null;
+          id: string;
+          priority: string;
+          start_date: string | null;
+          status: string;
+          target_date: string | null;
+          title: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          description?: string;
+          domain_id?: string | null;
+          id?: string;
+          priority?: string;
+          start_date?: string | null;
+          status?: string;
+          target_date?: string | null;
+          title: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          description?: string;
+          domain_id?: string | null;
+          id?: string;
+          priority?: string;
+          start_date?: string | null;
+          status?: string;
+          target_date?: string | null;
+          title?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'goals_domain_fk';
+            columns: ['workspace_id', 'domain_id'];
+            isOneToOne: false;
+            referencedRelation: 'domains';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'goals_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;

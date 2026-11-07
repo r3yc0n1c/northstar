@@ -12,6 +12,7 @@ describe('Database & RLS Schema Migrations', () => {
     expect(files).toContain('20261103000003_functions_and_triggers.sql');
     expect(files).toContain('20261103000004_rls_policies.sql');
     expect(files).toContain('20261104000001_validate_working_hours.sql');
+    expect(files).toContain('20261104000002_create_domains_and_goals.sql');
   });
 
   it('defines the profiles table with constraints and checks', () => {
@@ -96,6 +97,24 @@ describe('Database & RLS Schema Migrations', () => {
     expect(content).toContain(
       'grant execute on function public.validate_working_hours(jsonb) to authenticated;',
     );
+  });
+
+  it('defines domains and goals tables with composite FKs and RLS (FR-ONB, FR-GOAL)', () => {
+    const content = fs.readFileSync(
+      path.join(migrationsDir, '20261104000002_create_domains_and_goals.sql'),
+      'utf-8',
+    );
+    // Domains table checks
+    expect(content).toContain('create table if not exists public.domains');
+    expect(content).toContain('constraint domains_workspace_id_id_key unique (workspace_id, id)');
+    expect(content).toContain('alter table public.domains enable row level security;');
+    expect(content).toContain('public.is_workspace_owner(workspace_id)');
+
+    // Goals table checks
+    expect(content).toContain('create table if not exists public.goals');
+    expect(content).toContain('constraint goals_workspace_id_id_key unique (workspace_id, id)');
+    expect(content).toContain('references public.domains (workspace_id, id) on delete set null');
+    expect(content).toContain('alter table public.goals enable row level security;');
   });
 
   it('documents the workspace RLS pattern and composite foreign key strategy in docs/rls.md', () => {
