@@ -13,6 +13,7 @@ import {
   VerifyEmailLanding,
   VerifyRequiredPage,
 } from '@/features/auth';
+import { OnboardingGate } from '@/features/onboarding';
 import { AppShell } from './shell/AppShell';
 import { KitchenSink } from './routes/KitchenSink';
 import { TodayPage } from './pages/TodayPage';
@@ -23,6 +24,7 @@ import { ProjectsPage } from './pages/ProjectsPage';
 import { HabitsPage } from './pages/HabitsPage';
 import { ReviewsPage } from './pages/ReviewsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { OnboardingPage } from './pages/OnboardingPage';
 
 export function App() {
   return (
@@ -53,17 +55,23 @@ export function App() {
 
             {/* Authenticated & Verified App Shell with 7 Destinations + Settings */}
             <Route element={<ProtectedRoute />}>
-              <Route element={<AppShell />}>
-                <Route index element={<Navigate to="/today" replace />} />
-                <Route path="today" element={<TodayPage />} />
-                <Route path="inbox" element={<InboxPage />} />
-                <Route path="tasks" element={<TasksPage />} />
-                <Route path="goals" element={<GoalsPage />} />
-                <Route path="projects" element={<ProjectsPage />} />
-                <Route path="habits" element={<HabitsPage />} />
-                <Route path="reviews" element={<ReviewsPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="*" element={<Navigate to="/today" replace />} />
+              {/* Onboarding Flow: outside AppShell layout, protected by auth */}
+              <Route path="onboarding" element={<OnboardingPage />} />
+
+              {/* Main AppShell gated by onboarding completion (FR-ONB) */}
+              <Route element={<OnboardingGate />}>
+                <Route element={<AppShell />}>
+                  <Route index element={<Navigate to="/today" replace />} />
+                  <Route path="today" element={<TodayPage />} />
+                  <Route path="inbox" element={<InboxPage />} />
+                  <Route path="tasks" element={<TasksPage />} />
+                  <Route path="goals" element={<GoalsPage />} />
+                  <Route path="projects" element={<ProjectsPage />} />
+                  <Route path="habits" element={<HabitsPage />} />
+                  <Route path="reviews" element={<ReviewsPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="*" element={<Navigate to="/today" replace />} />
+                </Route>
               </Route>
             </Route>
           </Routes>
