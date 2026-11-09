@@ -124,5 +124,26 @@ describe('Database & RLS Schema Migrations', () => {
     expect(content).toContain('public.is_workspace_owner(workspace_id)');
     expect(content).toContain('composite key');
     expect(content).toContain('kr_check_ins');
+    expect(content).toContain('Two-User Automated RLS Test Matrix Harness');
+  });
+
+  it('provides an extensible two-user RLS matrix test harness (FR-AUTH-9, Ticket NS-21)', () => {
+    const authHarnessPath = path.resolve(import.meta.dirname, 'harness/auth.ts');
+    const matrixHarnessPath = path.resolve(import.meta.dirname, 'harness/matrix.ts');
+    const rlsMatrixTestPath = path.resolve(import.meta.dirname, 'rls-matrix.test.ts');
+
+    expect(fs.existsSync(authHarnessPath)).toBe(true);
+    expect(fs.existsSync(matrixHarnessPath)).toBe(true);
+    expect(fs.existsSync(rlsMatrixTestPath)).toBe(true);
+
+    const matrixContent = fs.readFileSync(matrixHarnessPath, 'utf-8');
+    expect(matrixContent).toContain('export function testTableIsolation');
+    expect(matrixContent).toContain('violates row-level security');
+    expect(matrixContent).toContain('foreign key constraint');
+
+    const testContent = fs.readFileSync(rlsMatrixTestPath, 'utf-8');
+    expect(testContent).toContain('testTableIsolation');
+    expect(testContent).toContain("tableName: 'domains'");
+    expect(testContent).toContain("tableName: 'goals'");
   });
 });
