@@ -118,3 +118,19 @@ To guarantee cross-workspace data isolation at the schema layer:
      on delete cascade
    ```
 This prevents orphaned child rows from ever attaching to parent rows in another workspace.
+
+---
+
+## 6. Two-User Automated RLS Test Matrix Harness
+
+Northstar includes an automated two-user database test suite (`supabase/tests/rls-matrix.test.ts` and `supabase/tests/harness/matrix.ts`) executed on every build via `pnpm test:db`.
+
+It verifies:
+1. **Real authenticated roles**: Uses two distinct authenticated users provisioned via Gotrue with real JWT tokens.
+2. **Read isolation**: User A sees zero rows belonging to User B across all workspace and identity tables.
+3. **Write isolation (WITH CHECK)**: Attempting to insert a row with another user's `workspace_id` fails with an RLS policy violation.
+4. **Update isolation**: Cross-user updates are rejected, modifying zero rows.
+5. **Delete isolation**: Cross-user deletions are rejected, deleting zero rows.
+6. **Composite foreign key integrity**: Cross-workspace parent references (e.g. User A goal referencing User B domain) are structurally blocked by Postgres composite foreign keys (`23503`).
+7. **Append-only verification**: Immutability support ensuring tables like `kr_check_ins` reject both owner and non-owner `UPDATE` and `DELETE` queries.
+8. **Extensible helper**: Adding a new table to the isolation matrix requires only a declarative `testTableIsolation({...})` specification.
