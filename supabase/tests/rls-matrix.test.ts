@@ -157,4 +157,89 @@ describe.runIf(isLive)('Two-User RLS & Constraint Test Suite (Phase 1)', () => {
     },
     () => ctx,
   );
+
+  // 5. NS-22: Vision and Life Areas archiving rules
+  describe('NS-22: Vision statement & Life Area Archiving Rules', () => {
+    it('allows workspace owner to update vision and prevents cross-user modification', async () => {
+      const { userA, userB } = ctx;
+      const visionA = 'Build a calm, focused personal OS with zero compromise.';
+
+      // User A updates their workspace vision
+      const { data: updatedA, error: errA } = await userA.client
+        .from('workspaces')
+        .update({ vision: visionA })
+        .eq('id', userA.workspaceId)
+        .select('vision')
+        .single();
+
+      expect(errA).toBeNull();
+      expect(updatedA?.vision).toBe(visionA);
+
+      // User B cannot see User A's updated workspace vision
+      const { data: crossRead } = await userB.client
+        .from('workspaces')
+        .select('vision')
+        .eq('id', userA.workspaceId);
+      expect(crossRead ?? []).toHaveLength(0);
+
+      // User B cannot overwrite User A's workspace vision
+      const { data: crossUpdate } = await userB.client
+        .from('workspaces')
+        .update({ vision: 'Malicious Vision' })
+        .eq('id', userA.workspaceId)
+        .select();
+      expect(crossUpdate ?? []).toHaveLength(0);
+    });
+
+    it('enforces unique domain names among active domains, but allows duplicate name when archived', async () => {
+      const { userA } = ctx;
+      const areaName = `Wellness-${Date.now()}`;
+
+      // Insert active domain
+      const { data: initial, error: initialErr } = await userA.client
+        .from('domains')
+        .insert({
+          workspace_id: userA.workspaceId,
+          name: areaName,
+          color: '#6FCF97',
+          icon: 'heart-pulse',
+        })
+        .select()
+        .single();
+
+      expect(initialErr).toBeNull();
+      expect(initial?.name).toBe(areaName);
+
+      // Inserting second active domain with same name must fail (case-insensitive)
+      const { error: duplicateErr } = await userA.client.from('domains').insert({
+        workspace_id: userA.workspaceId,
+        name: areaName.toUpperCase(),
+        color: '#6FCF97',
+        icon: 'heart-pulse',
+      });
+      expect(duplicateErr).not.toBeNull();
+
+      // Archive initial domain
+      const { error: archiveErr } = await userA.client
+        .from('domains')
+        .update({ archived_at: new Date().toISOString() })
+        .eq('id', initial?.id);
+      expect(archiveErr).toBeNull();
+
+      // Now inserting new active domain with the same name succeeds
+      const { data: recreated, error: recreatedErr } = await userA.client
+        .from('domains')
+        .insert({
+          workspace_id: userA.workspaceId,
+          name: areaName,
+          color: '#6FCF97',
+          icon: 'heart-pulse',
+        })
+        .select()
+        .single();
+
+      expect(recreatedErr).toBeNull();
+      expect(recreated?.name).toBe(areaName);
+    });
+  });
 });
