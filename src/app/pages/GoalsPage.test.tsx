@@ -6,6 +6,8 @@ import { GoalsPage } from './GoalsPage';
 import * as workspaceApi from '@/features/goals/api/workspace';
 import * as domainsApi from '@/features/goals/api/domains';
 import * as visionApi from '@/features/goals/api/vision';
+import * as goalsApi from '@/features/goals/api/goals';
+import * as cyclesApi from '@/features/goals/api/cycles';
 import { AuthProvider } from '@/features/auth';
 import type { Session } from '@supabase/supabase-js';
 
@@ -25,6 +27,22 @@ vi.mock('@/features/goals/api/domains', () => ({
 vi.mock('@/features/goals/api/vision', () => ({
   fetchWorkspaceVision: vi.fn(),
   updateWorkspaceVision: vi.fn(),
+}));
+
+vi.mock('@/features/goals/api/goals', () => ({
+  fetchGoals: vi.fn(),
+  createGoal: vi.fn(),
+  updateGoal: vi.fn(),
+  archiveGoal: vi.fn(),
+  restoreGoal: vi.fn(),
+  deleteGoal: vi.fn(),
+}));
+
+vi.mock('@/features/goals/api/cycles', () => ({
+  fetchCycles: vi.fn(),
+  createCycle: vi.fn(),
+  updateCycle: vi.fn(),
+  deleteCycle: vi.fn(),
 }));
 
 const mockSession: Session = {
@@ -79,6 +97,8 @@ describe('GoalsPage', () => {
     vi.mocked(workspaceApi.fetchCurrentWorkspace).mockResolvedValue(mockWorkspace);
     vi.mocked(visionApi.fetchWorkspaceVision).mockResolvedValue(mockWorkspace.vision);
     vi.mocked(domainsApi.fetchDomains).mockResolvedValue([]);
+    vi.mocked(goalsApi.fetchGoals).mockResolvedValue([]);
+    vi.mocked(cyclesApi.fetchCycles).mockResolvedValue([]);
 
     renderGoalsPage();
 
@@ -93,6 +113,8 @@ describe('GoalsPage', () => {
     vi.mocked(workspaceApi.fetchCurrentWorkspace).mockResolvedValue(mockWorkspace);
     vi.mocked(visionApi.fetchWorkspaceVision).mockResolvedValue(mockWorkspace.vision);
     vi.mocked(domainsApi.fetchDomains).mockResolvedValue([]);
+    vi.mocked(goalsApi.fetchGoals).mockResolvedValue([]);
+    vi.mocked(cyclesApi.fetchCycles).mockResolvedValue([]);
 
     renderGoalsPage();
 
@@ -103,10 +125,28 @@ describe('GoalsPage', () => {
     expect(screen.getByRole('button', { name: /New Life Area/i })).toBeInTheDocument();
   });
 
+  it('navigates to Goals tab and renders goals list content', async () => {
+    vi.mocked(workspaceApi.fetchCurrentWorkspace).mockResolvedValue(mockWorkspace);
+    vi.mocked(visionApi.fetchWorkspaceVision).mockResolvedValue(mockWorkspace.vision);
+    vi.mocked(domainsApi.fetchDomains).mockResolvedValue([]);
+    vi.mocked(goalsApi.fetchGoals).mockResolvedValue([]);
+    vi.mocked(cyclesApi.fetchCycles).mockResolvedValue([]);
+
+    renderGoalsPage();
+
+    const goalsTab = await screen.findByRole('tab', { name: /Goals/i });
+    fireEvent.click(goalsTab);
+
+    expect(screen.getByTestId('goals-tab-content')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /New Goal/i })).toBeInTheDocument();
+  });
+
   it('respects ?tab=areas search query param on initial load', async () => {
     vi.mocked(workspaceApi.fetchCurrentWorkspace).mockResolvedValue(mockWorkspace);
     vi.mocked(visionApi.fetchWorkspaceVision).mockResolvedValue(mockWorkspace.vision);
     vi.mocked(domainsApi.fetchDomains).mockResolvedValue([]);
+    vi.mocked(goalsApi.fetchGoals).mockResolvedValue([]);
+    vi.mocked(cyclesApi.fetchCycles).mockResolvedValue([]);
 
     renderGoalsPage('/goals?tab=areas');
 

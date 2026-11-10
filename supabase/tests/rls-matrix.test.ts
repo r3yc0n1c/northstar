@@ -242,4 +242,83 @@ describe.runIf(isLive)('Two-User RLS & Constraint Test Suite (Phase 1)', () => {
       expect(recreated?.name).toBe(areaName);
     });
   });
+
+  // 6. Extensible Matrix Table: cycles
+  testTableIsolation(
+    {
+      tableName: 'cycles',
+      createRowA: (context) => ({
+        workspace_id: context.userA.workspaceId,
+        name: 'Q4 2026 Cycle A',
+        cycle_type: 'quarterly',
+        start_date: '2026-10-01',
+        end_date: '2026-12-31',
+        status: 'active',
+      }),
+      createRowB: (context) => ({
+        workspace_id: context.userB.workspaceId,
+        name: 'Q4 2026 Cycle B',
+        cycle_type: 'quarterly',
+        start_date: '2026-10-01',
+        end_date: '2026-12-31',
+        status: 'active',
+      }),
+      updatePayloadA: { name: 'Compromised Cycle Name' },
+    },
+    () => ctx,
+  );
+
+  // 7. NS-23: Goals and Cycles Constraints & Business Rules
+  describe('NS-23: Goals and Cycles Constraints & Business Rules', () => {
+    it('enforces cycles date constraint: end_date >= start_date', async () => {
+      const { userA } = ctx;
+      const { error } = await userA.client.from('cycles').insert({
+        workspace_id: userA.workspaceId,
+        name: 'Invalid Date Cycle',
+        cycle_type: 'quarterly',
+        start_date: '2026-12-31',
+        end_date: '2026-01-01',
+        status: 'planned',
+      });
+      expect(error).not.toBeNull();
+      expect(error?.message).toMatch(/cycles_dates_order_check/i);
+    });
+
+    it('enforces goals priority check constraint (including none)', async () => {
+      const { userA } = ctx;
+      // 'none' priority is valid and accepted
+      const { data: goalNone, error: noneErr } = await userA.client
+        .from('goals')
+        .insert({
+          workspace_id: userA.workspaceId,
+          title: 'Goal with priority none',
+          priority: 'none',
+        })
+        .select()
+        .single();
+
+      expect(noneErr).toBeNull();
+      expect(goalNone?.priority).toBe('none');
+
+      // Invalid priority rejected
+      const { error: invalidErr } = await userA.client.from('goals').insert({
+        workspace_id: userA.workspaceId,
+        title: 'Goal with invalid priority',
+        priority: 'super-urgent' as never,
+      });
+      expect(invalidErr).not.toBeNull();
+    });
+
+    it('enforces goals date constraint: target_date >= start_date', async () => {
+      const { userA } = ctx;
+      const { error } = await userA.client.from('goals').insert({
+        workspace_id: userA.workspaceId,
+        title: 'Invalid Goal Dates',
+        start_date: '2026-12-31',
+        target_date: '2026-01-01',
+      });
+      expect(error).not.toBeNull();
+      expect(error?.message).toMatch(/goals_dates_order_check/i);
+    });
+  });
 });

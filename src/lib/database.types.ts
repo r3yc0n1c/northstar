@@ -23,6 +23,51 @@ export type Database = {
   };
   public: {
     Tables: {
+      cycles: {
+        Row: {
+          created_at: string;
+          cycle_type: string;
+          end_date: string;
+          id: string;
+          name: string;
+          start_date: string;
+          status: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          cycle_type: string;
+          end_date: string;
+          id?: string;
+          name: string;
+          start_date: string;
+          status?: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          cycle_type?: string;
+          end_date?: string;
+          id?: string;
+          name?: string;
+          start_date?: string;
+          status?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'cycles_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       domains: {
         Row: {
           archived_at: string | null;
