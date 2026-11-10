@@ -3,9 +3,12 @@ import {
   createCycleSchema,
   createDomainSchema,
   createGoalSchema,
+  createObjectiveSchema,
   domainSchema,
+  objectiveSchema,
   reorderDomainsSchema,
   updateDomainSchema,
+  updateObjectiveSchema,
   visionSchema,
 } from './schema';
 
@@ -232,6 +235,154 @@ describe('Goals & Life Areas Schemas', () => {
       };
       const result = createCycleSchema.safeParse(invalid);
       expect(result.success).toBe(false);
+    });
+  });
+
+  describe('objectiveSchema', () => {
+    it('validates a complete objective database record', () => {
+      const record = {
+        id: 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
+        workspace_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        cycle_id: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
+        goal_id: null,
+        title: 'Launch Northstar beta',
+        description: 'First 50 beta users',
+        priority: 'high',
+        status: 'active',
+        confidence: 8,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+        archived_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      const result = objectiveSchema.safeParse(record);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('createObjectiveSchema', () => {
+    it('accepts valid objective input with full fields', () => {
+      const valid = {
+        cycle_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        goal_id: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
+        title: 'Launch Northstar beta',
+        description: 'First 50 beta users onboarded and providing feedback',
+        priority: 'high',
+        status: 'active',
+        confidence: 8,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      };
+      const result = createObjectiveSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.title).toBe('Launch Northstar beta');
+        expect(result.data.confidence).toBe(8);
+      }
+    });
+
+    it('accepts valid objective without optional goal_id and description', () => {
+      const valid = {
+        cycle_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Run marathon under 3h30m',
+        start_date: '2026-07-01',
+        due_date: '2026-09-30',
+      };
+      const result = createObjectiveSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.priority).toBe('none');
+        expect(result.data.status).toBe('active');
+        expect(result.data.confidence).toBeUndefined();
+      }
+    });
+
+    it('rejects empty title or title exceeding 120 chars', () => {
+      const empty = createObjectiveSchema.safeParse({
+        cycle_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: '   ',
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(empty.success).toBe(false);
+
+      const tooLong = createObjectiveSchema.safeParse({
+        cycle_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'A'.repeat(121),
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(tooLong.success).toBe(false);
+    });
+
+    it('rejects confidence outside 1..10 range or non-integers', () => {
+      const tooLow = createObjectiveSchema.safeParse({
+        cycle_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Low confidence',
+        confidence: 0,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(tooLow.success).toBe(false);
+
+      const tooHigh = createObjectiveSchema.safeParse({
+        cycle_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'High confidence',
+        confidence: 11,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(tooHigh.success).toBe(false);
+
+      const floatConfidence = createObjectiveSchema.safeParse({
+        cycle_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Float confidence',
+        confidence: 7.5,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(floatConfidence.success).toBe(false);
+    });
+
+    it('rejects due_date before start_date', () => {
+      const invalid = createObjectiveSchema.safeParse({
+        cycle_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Time travel objective',
+        start_date: '2026-12-31',
+        due_date: '2026-10-01',
+      });
+      expect(invalid.success).toBe(false);
+    });
+  });
+
+  describe('updateObjectiveSchema', () => {
+    it('accepts partial updates', () => {
+      const partial = updateObjectiveSchema.safeParse({
+        status: 'achieved',
+        confidence: 10,
+      });
+      expect(partial.success).toBe(true);
+    });
+
+    it('accepts archiving and restoring', () => {
+      const archive = updateObjectiveSchema.safeParse({
+        archived_at: new Date().toISOString(),
+      });
+      expect(archive.success).toBe(true);
+
+      const restore = updateObjectiveSchema.safeParse({
+        archived_at: null,
+      });
+      expect(restore.success).toBe(true);
+    });
+
+    it('rejects invalid date range in update', () => {
+      const invalid = updateObjectiveSchema.safeParse({
+        start_date: '2026-12-31',
+        due_date: '2026-10-01',
+      });
+      expect(invalid.success).toBe(false);
     });
   });
 });

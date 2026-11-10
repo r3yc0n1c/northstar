@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Target, Folder } from 'lucide-react';
-import { PageHeader, EmptyState, Button, Skeleton, ErrorState } from '@/components/ui';
+import { PageHeader, Skeleton, ErrorState } from '@/components/ui';
 import { selectCurrentCycle } from '@/domain/cycles';
 import {
   VisionCard,
@@ -9,10 +8,12 @@ import {
   LifeAreasList,
   GoalsList,
   CycleSelector,
+  ObjectivesList,
   useCurrentWorkspace,
   useDomains,
   useGoals,
   useCycles,
+  useObjectives,
   useCreateCycle,
   useUpdateCycle,
   useDeleteCycle,
@@ -56,8 +57,14 @@ export function GoalsPage() {
 
   const selectedCycle = cycles.find((c) => c.id === selectedCycleId) || cycles[0] || null;
 
+  const { data: cycleObjectives = [] } = useObjectives(workspace?.id, {
+    cycleId: selectedCycle?.id,
+    includeArchived: false,
+  });
+
   const activeAreasCount = domains.filter((d) => !d.archived_at).length;
   const activeGoalsCount = goals.filter((g) => !g.archived_at).length;
+  const activeOkrsCount = cycleObjectives.filter((o) => !o.archived_at).length;
 
   const handleTabChange = (tab: GoalsTab) => {
     setActiveTab(tab);
@@ -100,7 +107,7 @@ export function GoalsPage() {
               onTabChange={handleTabChange}
               areasCount={activeAreasCount}
               goalsCount={activeGoalsCount}
-              okrsCount={0}
+              okrsCount={activeOkrsCount}
             />
 
             {activeTab === 'okrs' && (
@@ -142,18 +149,11 @@ export function GoalsPage() {
 
           {activeTab === 'okrs' && (
             <div data-testid="okrs-tab-content" className="space-y-6">
-              <EmptyState
-                icon={Target}
-                title="No key results yet"
-                description={`Objectives and measurable key results for ${
-                  selectedCycle ? selectedCycle.name : 'this cycle'
-                } will appear here. Set up your directional outcomes in Goals or Life Areas.`}
-                action={
-                  <Button variant="secondary" size="sm" onClick={() => handleTabChange('goals')}>
-                    <Folder className="h-4 w-4 mr-1.5" />
-                    View Goals
-                  </Button>
-                }
+              <ObjectivesList
+                workspaceId={workspace.id}
+                selectedCycle={selectedCycle}
+                cycles={cycles}
+                goals={goals}
               />
             </div>
           )}

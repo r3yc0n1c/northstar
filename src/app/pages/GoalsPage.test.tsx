@@ -8,6 +8,7 @@ import * as domainsApi from '@/features/goals/api/domains';
 import * as visionApi from '@/features/goals/api/vision';
 import * as goalsApi from '@/features/goals/api/goals';
 import * as cyclesApi from '@/features/goals/api/cycles';
+import * as objectivesApi from '@/features/goals/api/objectives';
 import { AuthProvider } from '@/features/auth';
 import type { Session } from '@supabase/supabase-js';
 
@@ -43,6 +44,16 @@ vi.mock('@/features/goals/api/cycles', () => ({
   createCycle: vi.fn(),
   updateCycle: vi.fn(),
   deleteCycle: vi.fn(),
+}));
+
+vi.mock('@/features/goals/api/objectives', () => ({
+  fetchObjectives: vi.fn(),
+  fetchObjectiveById: vi.fn(),
+  createObjective: vi.fn(),
+  updateObjective: vi.fn(),
+  archiveObjective: vi.fn(),
+  restoreObjective: vi.fn(),
+  deleteObjective: vi.fn(),
 }));
 
 const mockSession: Session = {
@@ -99,6 +110,7 @@ describe('GoalsPage', () => {
     vi.mocked(domainsApi.fetchDomains).mockResolvedValue([]);
     vi.mocked(goalsApi.fetchGoals).mockResolvedValue([]);
     vi.mocked(cyclesApi.fetchCycles).mockResolvedValue([]);
+    vi.mocked(objectivesApi.fetchObjectives).mockResolvedValue([]);
 
     renderGoalsPage();
 
@@ -109,12 +121,56 @@ describe('GoalsPage', () => {
     expect(screen.getByRole('tab', { name: /Life Areas/i })).toBeInTheDocument();
   });
 
+  it('renders OKRs tab content with cycle objectives', async () => {
+    vi.mocked(workspaceApi.fetchCurrentWorkspace).mockResolvedValue(mockWorkspace);
+    vi.mocked(visionApi.fetchWorkspaceVision).mockResolvedValue(mockWorkspace.vision);
+    vi.mocked(domainsApi.fetchDomains).mockResolvedValue([]);
+    vi.mocked(goalsApi.fetchGoals).mockResolvedValue([]);
+    vi.mocked(cyclesApi.fetchCycles).mockResolvedValue([
+      {
+        id: 'cycle-1',
+        workspace_id: 'ws-777',
+        name: 'Q4 2026',
+        cycle_type: 'quarterly',
+        start_date: '2026-10-01',
+        end_date: '2026-12-31',
+        status: 'active',
+        created_at: '2026-10-01T00:00:00Z',
+        updated_at: '2026-10-01T00:00:00Z',
+      },
+    ]);
+    vi.mocked(objectivesApi.fetchObjectives).mockResolvedValue([
+      {
+        id: 'obj-1',
+        workspace_id: 'ws-777',
+        cycle_id: 'cycle-1',
+        goal_id: null,
+        title: 'Ship Alpha Release',
+        description: null,
+        priority: 'high',
+        status: 'active',
+        confidence: 8,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+        archived_at: null,
+        created_at: '2026-10-01T00:00:00Z',
+        updated_at: '2026-10-01T00:00:00Z',
+      },
+    ]);
+
+    renderGoalsPage('/goals?tab=okrs');
+
+    expect(await screen.findByText('Ship Alpha Release')).toBeInTheDocument();
+    expect(screen.getByText('Conf: 8/10')).toBeInTheDocument();
+  });
+
   it('navigates to Life Areas tab and renders life areas content', async () => {
     vi.mocked(workspaceApi.fetchCurrentWorkspace).mockResolvedValue(mockWorkspace);
     vi.mocked(visionApi.fetchWorkspaceVision).mockResolvedValue(mockWorkspace.vision);
     vi.mocked(domainsApi.fetchDomains).mockResolvedValue([]);
     vi.mocked(goalsApi.fetchGoals).mockResolvedValue([]);
     vi.mocked(cyclesApi.fetchCycles).mockResolvedValue([]);
+    vi.mocked(objectivesApi.fetchObjectives).mockResolvedValue([]);
 
     renderGoalsPage();
 
@@ -131,6 +187,7 @@ describe('GoalsPage', () => {
     vi.mocked(domainsApi.fetchDomains).mockResolvedValue([]);
     vi.mocked(goalsApi.fetchGoals).mockResolvedValue([]);
     vi.mocked(cyclesApi.fetchCycles).mockResolvedValue([]);
+    vi.mocked(objectivesApi.fetchObjectives).mockResolvedValue([]);
 
     renderGoalsPage();
 
@@ -147,6 +204,7 @@ describe('GoalsPage', () => {
     vi.mocked(domainsApi.fetchDomains).mockResolvedValue([]);
     vi.mocked(goalsApi.fetchGoals).mockResolvedValue([]);
     vi.mocked(cyclesApi.fetchCycles).mockResolvedValue([]);
+    vi.mocked(objectivesApi.fetchObjectives).mockResolvedValue([]);
 
     renderGoalsPage('/goals?tab=areas');
 

@@ -107,7 +107,7 @@ export const goalSchema = z.object({
     .trim()
     .min(1, 'Goal title is required')
     .max(120, 'Goal title must be 120 characters or less'),
-  description: z.string().default(''),
+  description: z.string().nullable().default(''),
   status: z.enum(GOAL_STATUSES).default('active'),
   priority: z.enum(GOAL_PRIORITIES).default('none'),
   start_date: z
@@ -291,3 +291,117 @@ export const updateCycleSchema = z
   );
 
 export type UpdateCycleInput = z.infer<typeof updateCycleSchema>;
+// ==========================================
+// OBJECTIVES SCHEMAS
+// ==========================================
+
+export const OBJECTIVE_STATUSES = ['draft', 'active', 'achieved', 'abandoned'] as const;
+export type ObjectiveStatus = (typeof OBJECTIVE_STATUSES)[number];
+
+export const OBJECTIVE_PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
+export type ObjectivePriority = (typeof OBJECTIVE_PRIORITIES)[number];
+
+export const objectiveSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid(),
+  cycle_id: z.string().uuid(),
+  goal_id: z.string().uuid().nullable().optional(),
+  title: z
+    .string()
+    .trim()
+    .min(1, 'Objective title is required')
+    .max(120, 'Objective title must be 120 characters or less'),
+  description: z.string().nullable().default(''),
+  status: z.enum(OBJECTIVE_STATUSES).default('draft'),
+  priority: z.enum(OBJECTIVE_PRIORITIES).default('none'),
+  confidence: z.number().int().min(1).max(10).nullable().optional(),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD'),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD'),
+  archived_at: z.string().nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export type Objective = z.infer<typeof objectiveSchema>;
+
+export const createObjectiveSchema = z
+  .object({
+    cycle_id: z.string().uuid('Cycle ID must be a valid UUID'),
+    goal_id: z.string().uuid().nullable().optional(),
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Objective title is required')
+      .max(120, 'Objective title must be 120 characters or less'),
+    description: z
+      .string()
+      .trim()
+      .max(1000, 'Description must be 1,000 characters or less')
+      .default(''),
+    status: z.enum(OBJECTIVE_STATUSES).default('active'),
+    priority: z.enum(OBJECTIVE_PRIORITIES).default('none'),
+    confidence: z
+      .number()
+      .int('Confidence must be an integer')
+      .min(1, 'Confidence must be between 1 and 10')
+      .max(10, 'Confidence must be between 1 and 10')
+      .nullable()
+      .optional(),
+    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD'),
+    due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD'),
+  })
+  .refine((data) => data.due_date >= data.start_date, {
+    message: 'Due date must be on or after start date',
+    path: ['due_date'],
+  });
+
+export type CreateObjectiveInput = z.infer<typeof createObjectiveSchema>;
+
+export const updateObjectiveSchema = z
+  .object({
+    cycle_id: z.string().uuid().optional(),
+    goal_id: z.string().uuid().nullable().optional(),
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Objective title cannot be empty')
+      .max(120, 'Objective title must be 120 characters or less')
+      .optional(),
+    description: z
+      .string()
+      .trim()
+      .max(1000, 'Description must be 1,000 characters or less')
+      .optional(),
+    status: z.enum(OBJECTIVE_STATUSES).optional(),
+    priority: z.enum(OBJECTIVE_PRIORITIES).optional(),
+    confidence: z
+      .number()
+      .int('Confidence must be an integer')
+      .min(1, 'Confidence must be between 1 and 10')
+      .max(10, 'Confidence must be between 1 and 10')
+      .nullable()
+      .optional(),
+    start_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD')
+      .optional(),
+    due_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD')
+      .optional(),
+    archived_at: z.string().nullable().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.start_date && data.due_date) {
+        return data.due_date >= data.start_date;
+      }
+      return true;
+    },
+    {
+      message: 'Due date must be on or after start date',
+      path: ['due_date'],
+    },
+  );
+
+export type UpdateObjectiveInput = z.infer<typeof updateObjectiveSchema>;
