@@ -174,6 +174,80 @@ export type Database = {
           },
         ];
       };
+      objectives: {
+        Row: {
+          archived_at: string | null;
+          confidence: number | null;
+          created_at: string;
+          cycle_id: string;
+          description: string;
+          due_date: string;
+          goal_id: string | null;
+          id: string;
+          priority: string;
+          start_date: string;
+          status: string;
+          title: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          confidence?: number | null;
+          created_at?: string;
+          cycle_id: string;
+          description?: string;
+          due_date: string;
+          goal_id?: string | null;
+          id?: string;
+          priority?: string;
+          start_date: string;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          confidence?: number | null;
+          created_at?: string;
+          cycle_id?: string;
+          description?: string;
+          due_date?: string;
+          goal_id?: string | null;
+          id?: string;
+          priority?: string;
+          start_date?: string;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'objectives_cycle_fk';
+            columns: ['workspace_id', 'cycle_id'];
+            isOneToOne: false;
+            referencedRelation: 'cycles';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'objectives_goal_fk';
+            columns: ['workspace_id', 'goal_id'];
+            isOneToOne: false;
+            referencedRelation: 'goals';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'objectives_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       profiles: {
         Row: {
           avatar_url: string | null;

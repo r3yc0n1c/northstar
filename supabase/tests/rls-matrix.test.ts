@@ -268,7 +268,56 @@ describe.runIf(isLive)('Two-User RLS & Constraint Test Suite (Phase 1)', () => {
     () => ctx,
   );
 
-  // 7. NS-23: Goals and Cycles Constraints & Business Rules
+  // 7. Extensible Matrix Table: objectives (with composite foreign key to cycles)
+  testTableIsolation(
+    {
+      tableName: 'objectives',
+      compositeForeignKey: {
+        parentTable: 'cycles',
+        foreignKeyColumn: 'cycle_id',
+        createParentRowA: (context) => ({
+          workspace_id: context.userA.workspaceId,
+          name: 'Parent Cycle A for Objectives',
+          cycle_type: 'quarterly',
+          start_date: '2026-10-01',
+          end_date: '2026-12-31',
+          status: 'active',
+        }),
+        createParentRowB: (context) => ({
+          workspace_id: context.userB.workspaceId,
+          name: 'Parent Cycle B for Objectives',
+          cycle_type: 'quarterly',
+          start_date: '2026-10-01',
+          end_date: '2026-12-31',
+          status: 'active',
+        }),
+      },
+      createRowA: (context, parentA) => ({
+        workspace_id: context.userA.workspaceId,
+        cycle_id: parentA?.id as string,
+        title: 'Launch MVP to First 50 Users A',
+        status: 'active',
+        priority: 'high',
+        confidence: 8,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      }),
+      createRowB: (context, parentB) => ({
+        workspace_id: context.userB.workspaceId,
+        cycle_id: parentB?.id as string,
+        title: 'Achieve 99.9% Uptime B',
+        status: 'active',
+        priority: 'medium',
+        confidence: 7,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      }),
+      updatePayloadA: { title: 'Compromised Objective Title' },
+    },
+    () => ctx,
+  );
+
+  // 8. NS-23: Goals and Cycles Constraints & Business Rules
   describe('NS-23: Goals and Cycles Constraints & Business Rules', () => {
     it('enforces cycles date constraint: end_date >= start_date', async () => {
       const { userA } = ctx;
@@ -319,6 +368,135 @@ describe.runIf(isLive)('Two-User RLS & Constraint Test Suite (Phase 1)', () => {
       });
       expect(error).not.toBeNull();
       expect(error?.message).toMatch(/goals_dates_order_check/i);
+    });
+  });
+
+  // 9. NS-24: Objectives Constraints & Composite FK Rules
+  describe('NS-24: Objectives Constraints & Composite FK Rules', () => {
+    it('enforces confidence check between 1 and 10', async () => {
+      const { userA } = ctx;
+      // First create a cycle for user A
+      const { data: cycle } = await userA.client
+        .from('cycles')
+        .insert({
+          workspace_id: userA.workspaceId,
+          name: 'Cycle for Confidence Check',
+          cycle_type: 'quarterly',
+          start_date: '2026-10-01',
+          end_date: '2026-12-31',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      expect(cycle).toBeDefined();
+
+      // Confidence = 0 rejected
+      const { error: lowErr } = await userA.client.from('objectives').insert({
+        workspace_id: userA.workspaceId,
+        cycle_id: cycle?.id,
+        title: 'Low Confidence Objective',
+        confidence: 0,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(lowErr).not.toBeNull();
+      expect(lowErr?.message).toMatch(/objectives_confidence_check/i);
+
+      // Confidence = 11 rejected
+      const { error: highErr } = await userA.client.from('objectives').insert({
+        workspace_id: userA.workspaceId,
+        cycle_id: cycle?.id,
+        title: 'High Confidence Objective',
+        confidence: 11,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(highErr).not.toBeNull();
+      expect(highErr?.message).toMatch(/objectives_confidence_check/i);
+
+      // Confidence = 9 accepted
+      const { data: validObj, error: validErr } = await userA.client
+        .from('objectives')
+        .insert({
+          workspace_id: userA.workspaceId,
+          cycle_id: cycle?.id,
+          title: 'Valid Confidence Objective',
+          confidence: 9,
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        })
+        .select()
+        .single();
+      expect(validErr).toBeNull();
+      expect(validObj?.confidence).toBe(9);
+    });
+
+    it('enforces objectives date constraint: due_date >= start_date', async () => {
+      const { userA } = ctx;
+      const { data: cycle } = await userA.client
+        .from('cycles')
+        .insert({
+          workspace_id: userA.workspaceId,
+          name: 'Cycle for Date Check',
+          cycle_type: 'quarterly',
+          start_date: '2026-10-01',
+          end_date: '2026-12-31',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      const { error } = await userA.client.from('objectives').insert({
+        workspace_id: userA.workspaceId,
+        cycle_id: cycle?.id,
+        title: 'Invalid Date Objective',
+        start_date: '2026-12-31',
+        due_date: '2026-10-01',
+      });
+      expect(error).not.toBeNull();
+      expect(error?.message).toMatch(/objectives_dates_order_check/i);
+    });
+
+    it('rejects cross-workspace parent goal reference via composite foreign key', async () => {
+      const { userA, userB } = ctx;
+
+      // Cycle for User A
+      const { data: cycleA } = await userA.client
+        .from('cycles')
+        .insert({
+          workspace_id: userA.workspaceId,
+          name: 'Cycle A',
+          cycle_type: 'quarterly',
+          start_date: '2026-10-01',
+          end_date: '2026-12-31',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      // Goal for User B
+      const { data: goalB } = await userB.client
+        .from('goals')
+        .insert({
+          workspace_id: userB.workspaceId,
+          title: 'Goal B of User B',
+        })
+        .select()
+        .single();
+
+      // User A attempts to link their objective to User B's goal
+      const { error } = await userA.client.from('objectives').insert({
+        workspace_id: userA.workspaceId,
+        cycle_id: cycleA?.id,
+        goal_id: goalB?.id,
+        title: 'Cross Workspace Objective',
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+
+      expect(error).not.toBeNull();
+      expect(error?.message).toMatch(/fk_objectives_goal_workspace|violates foreign key/i);
     });
   });
 });
