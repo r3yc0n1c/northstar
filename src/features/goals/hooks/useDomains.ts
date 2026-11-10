@@ -14,6 +14,10 @@ export const goalsKeys = {
   domains: (workspaceId?: string, includeArchived = false) =>
     [...goalsKeys.all, 'domains', workspaceId, { includeArchived }] as const,
   vision: (workspaceId?: string) => [...goalsKeys.all, 'vision', workspaceId] as const,
+  goals: (workspaceId?: string, options?: unknown) =>
+    [...goalsKeys.all, 'goals-list', workspaceId, options ?? {}] as const,
+  cycles: (workspaceId?: string, options?: unknown) =>
+    [...goalsKeys.all, 'cycles', workspaceId, options ?? {}] as const,
 };
 
 export function useDomains(workspaceId?: string, includeArchived = false) {

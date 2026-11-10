@@ -1,14 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Target, Flag, Folder, Plus } from 'lucide-react';
+import { Target, Folder } from 'lucide-react';
 import { PageHeader, EmptyState, Button, Skeleton, ErrorState } from '@/components/ui';
+import { selectCurrentCycle } from '@/domain/cycles';
 import {
   VisionCard,
   GoalsNavigationTabs,
   LifeAreasList,
+  GoalsList,
+  CycleSelector,
   useCurrentWorkspace,
   useDomains,
+  useGoals,
+  useCycles,
+  useCreateCycle,
+  useUpdateCycle,
+  useDeleteCycle,
   type GoalsTab,
+  type Cycle,
 } from '@/features/goals';
 
 export function GoalsPage() {
@@ -26,7 +35,29 @@ export function GoalsPage() {
   } = useCurrentWorkspace();
 
   const { data: domains = [] } = useDomains(workspace?.id);
+  const { data: goals = [] } = useGoals(workspace?.id, { includeArchived: false });
+  const { data: cycles = [] } = useCycles(workspace?.id);
+  const { mutateAsync: createCycleMut, isPending: isCreatingCycle } = useCreateCycle(workspace?.id);
+  const { mutateAsync: updateCycleMut, isPending: isUpdatingCycle } = useUpdateCycle(workspace?.id);
+  const { mutateAsync: deleteCycleMut } = useDeleteCycle(workspace?.id);
+
+  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
+
+  // Sync selectedCycle to today's active cycle if not explicitly picked
+  useEffect(() => {
+    if (cycles.length > 0 && !selectedCycleId) {
+      const today = new Date().toISOString().slice(0, 10);
+      const current = selectCurrentCycle(cycles, today);
+      if (current?.id) {
+        setSelectedCycleId(current.id);
+      }
+    }
+  }, [cycles, selectedCycleId]);
+
+  const selectedCycle = cycles.find((c) => c.id === selectedCycleId) || cycles[0] || null;
+
   const activeAreasCount = domains.filter((d) => !d.archived_at).length;
+  const activeGoalsCount = goals.filter((g) => !g.archived_at).length;
 
   const handleTabChange = (tab: GoalsTab) => {
     setActiveTab(tab);
@@ -62,15 +93,38 @@ export function GoalsPage() {
           {/* Lifetime Anchor Vision Statement Card */}
           <VisionCard workspaceId={workspace.id} />
 
-          {/* Navigation Tab Bar */}
+          {/* Navigation Tab Bar & Optional Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <GoalsNavigationTabs
               activeTab={activeTab}
               onTabChange={handleTabChange}
               areasCount={activeAreasCount}
-              goalsCount={0}
+              goalsCount={activeGoalsCount}
               okrsCount={0}
             />
+
+            {activeTab === 'okrs' && (
+              <CycleSelector
+                cycles={cycles}
+                selectedCycle={selectedCycle}
+                onSelectCycle={(cycle: Cycle) => setSelectedCycleId(cycle.id)}
+                onCreateCycle={async (input) => {
+                  const created = await createCycleMut(input);
+                  setSelectedCycleId(created.id);
+                }}
+                onUpdateCycle={async (cycleId, input) => {
+                  await updateCycleMut({ cycleId, input });
+                }}
+                onDeleteCycle={async (cycleId) => {
+                  await deleteCycleMut(cycleId);
+                  if (selectedCycleId === cycleId) {
+                    setSelectedCycleId(null);
+                  }
+                }}
+                isCreating={isCreatingCycle}
+                isUpdating={isUpdatingCycle}
+              />
+            )}
           </div>
 
           {/* Tab Content */}
@@ -80,32 +134,24 @@ export function GoalsPage() {
             </div>
           )}
 
+          {activeTab === 'goals' && (
+            <div data-testid="goals-tab-content">
+              <GoalsList workspaceId={workspace.id} domains={domains} />
+            </div>
+          )}
+
           {activeTab === 'okrs' && (
             <div data-testid="okrs-tab-content" className="space-y-6">
               <EmptyState
                 icon={Target}
-                title="No active OKRs yet"
-                description="Quarterly cycles and measurable key results will be tracked here. Start by setting up your life dimensions in Life Areas."
+                title="No key results yet"
+                description={`Objectives and measurable key results for ${
+                  selectedCycle ? selectedCycle.name : 'this cycle'
+                } will appear here. Set up your directional outcomes in Goals or Life Areas.`}
                 action={
-                  <Button variant="secondary" size="sm" onClick={() => handleTabChange('areas')}>
+                  <Button variant="secondary" size="sm" onClick={() => handleTabChange('goals')}>
                     <Folder className="h-4 w-4 mr-1.5" />
-                    Configure Life Areas
-                  </Button>
-                }
-              />
-            </div>
-          )}
-
-          {activeTab === 'goals' && (
-            <div data-testid="goals-tab-content" className="space-y-6">
-              <EmptyState
-                icon={Flag}
-                title="No long-term goals configured"
-                description="High-level directional goals tied to your life areas will live here."
-                action={
-                  <Button variant="secondary" size="sm" onClick={() => handleTabChange('areas')}>
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    Set Up Life Areas First
+                    View Goals
                   </Button>
                 }
               />

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createCycleSchema,
   createDomainSchema,
+  createGoalSchema,
   domainSchema,
   reorderDomainsSchema,
   updateDomainSchema,
@@ -150,6 +152,85 @@ describe('Goals & Life Areas Schemas', () => {
       const result = visionSchema.safeParse({
         vision: 'x'.repeat(1001),
       });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('createGoalSchema', () => {
+    it('accepts valid goal with title, domain, priority, and dates', () => {
+      const valid = {
+        title: 'Run a marathon',
+        description: 'Complete 42.2km under 4 hours',
+        domain_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        status: 'active',
+        priority: 'high',
+        start_date: '2026-01-01',
+        target_date: '2026-10-15',
+      };
+      const result = createGoalSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+    });
+
+    it('defaults priority to none and status to active when omitted', () => {
+      const result = createGoalSchema.safeParse({
+        title: 'Learn Rust',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.priority).toBe('none');
+        expect(result.data.status).toBe('active');
+      }
+    });
+
+    it('rejects empty goal title', () => {
+      const result = createGoalSchema.safeParse({
+        title: '   ',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects target_date before start_date', () => {
+      const result = createGoalSchema.safeParse({
+        title: 'Reverse time',
+        start_date: '2026-12-31',
+        target_date: '2026-01-01',
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('createCycleSchema', () => {
+    it('accepts valid quarterly cycle input', () => {
+      const valid = {
+        name: 'Q4 2026',
+        cycle_type: 'quarterly',
+        start_date: '2026-10-01',
+        end_date: '2026-12-31',
+        status: 'active',
+      };
+      const result = createCycleSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects cycle end_date before start_date', () => {
+      const invalid = {
+        name: 'Invalid Cycle',
+        cycle_type: 'monthly',
+        start_date: '2026-11-30',
+        end_date: '2026-11-01',
+      };
+      const result = createCycleSchema.safeParse(invalid);
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects invalid cycle_type', () => {
+      const invalid = {
+        name: 'Bi-weekly sprint',
+        cycle_type: 'sprint',
+        start_date: '2026-10-01',
+        end_date: '2026-10-14',
+      };
+      const result = createCycleSchema.safeParse(invalid);
       expect(result.success).toBe(false);
     });
   });
