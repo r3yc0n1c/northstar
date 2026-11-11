@@ -1059,4 +1059,632 @@ describe.runIf(isLive)('Two-User RLS & Constraint Test Suite (Phase 1)', () => {
       }
     });
   });
+
+  // ==========================================
+  // PHASE 3 RLS & CONSTRAINTS TESTS
+  // ==========================================
+
+  // 10. Extensible Matrix Table: projects
+  testTableIsolation(
+    {
+      tableName: 'projects',
+      createRowA: (context) => ({
+        workspace_id: context.userA.workspaceId,
+        title: 'Project Alpha A',
+        description: 'Alpha project description',
+        status: 'active',
+        priority: 'high',
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      }),
+      createRowB: (context) => ({
+        workspace_id: context.userB.workspaceId,
+        title: 'Project Beta B',
+        description: 'Beta project description',
+        status: 'active',
+        priority: 'medium',
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      }),
+      updatePayloadA: { title: 'Compromised Project' },
+    },
+    () => ctx,
+  );
+
+  // 11. Extensible Matrix Table: project_milestones (composite FK to projects)
+  testTableIsolation(
+    {
+      tableName: 'project_milestones',
+      compositeForeignKey: {
+        parentTable: 'projects',
+        foreignKeyColumn: 'project_id',
+        createParentRowA: (context) => ({
+          workspace_id: context.userA.workspaceId,
+          title: 'Parent Project for Milestone A',
+          status: 'active',
+          priority: 'high',
+        }),
+        createParentRowB: (context) => ({
+          workspace_id: context.userB.workspaceId,
+          title: 'Parent Project for Milestone B',
+          status: 'active',
+          priority: 'medium',
+        }),
+      },
+      createRowA: (context, parentA) => ({
+        workspace_id: context.userA.workspaceId,
+        project_id: parentA?.id as string,
+        title: 'Milestone 1 A',
+        status: 'open',
+        sort_order: 1,
+        due_date: '2026-11-15',
+      }),
+      createRowB: (context, parentB) => ({
+        workspace_id: context.userB.workspaceId,
+        project_id: parentB?.id as string,
+        title: 'Milestone 1 B',
+        status: 'open',
+        sort_order: 1,
+        due_date: '2026-11-20',
+      }),
+      updatePayloadA: { title: 'Compromised Milestone' },
+    },
+    () => ctx,
+  );
+
+  // 12. Extensible Matrix Table: labels
+  testTableIsolation(
+    {
+      tableName: 'labels',
+      createRowA: (context) => ({
+        workspace_id: context.userA.workspaceId,
+        name: 'Urgent Label A',
+        color: '#E5707F',
+      }),
+      createRowB: (context) => ({
+        workspace_id: context.userB.workspaceId,
+        name: 'Feature Label B',
+        color: '#5A4F7C',
+      }),
+      updatePayloadA: { name: 'Compromised Label' },
+    },
+    () => ctx,
+  );
+
+  // 13. Extensible Matrix Table: tasks
+  testTableIsolation(
+    {
+      tableName: 'tasks',
+      createRowA: (context) => ({
+        workspace_id: context.userA.workspaceId,
+        title: 'Stand-alone Task A',
+        status: 'todo',
+        priority: 'high',
+        planned_date: '2026-11-15',
+        due_date: '2026-11-20',
+        estimated_minutes: 45,
+      }),
+      createRowB: (context) => ({
+        workspace_id: context.userB.workspaceId,
+        title: 'Stand-alone Task B',
+        status: 'inbox',
+        priority: 'medium',
+        planned_date: '2026-11-16',
+        due_date: '2026-11-25',
+        estimated_minutes: 30,
+      }),
+      updatePayloadA: { title: 'Compromised Task Title' },
+    },
+    () => ctx,
+  );
+
+  // 14. Junction Table RLS & Integrity: project_objectives & project_key_results
+  describe('Project Links RLS & Integrity', () => {
+    it('enforces isolation and cross-workspace rejection on project_objectives', async () => {
+      const { userA, userB } = ctx;
+
+      // Create cycle, objective, and project for user A
+      const { data: cycleA } = await userA.client
+        .from('cycles')
+        .insert({
+          workspace_id: userA.workspaceId,
+          name: 'Cycle A for Link',
+          cycle_type: 'quarterly',
+          start_date: '2026-10-01',
+          end_date: '2026-12-31',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      const { data: objA } = await userA.client
+        .from('objectives')
+        .insert({
+          workspace_id: userA.workspaceId,
+          cycle_id: cycleA?.id,
+          title: 'Objective A for Project Link',
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        })
+        .select()
+        .single();
+
+      const { data: projA } = await userA.client
+        .from('projects')
+        .insert({
+          workspace_id: userA.workspaceId,
+          title: 'Project A for Link',
+        })
+        .select()
+        .single();
+
+      // Create project for user B
+      const { data: projB } = await userB.client
+        .from('projects')
+        .insert({
+          workspace_id: userB.workspaceId,
+          title: 'Project B for Link',
+        })
+        .select()
+        .single();
+
+      // User A links their project to their objective -> succeeds
+      const { data: linkA, error: linkAErr } = await userA.client
+        .from('project_objectives')
+        .insert({
+          workspace_id: userA.workspaceId,
+          project_id: projA?.id,
+          objective_id: objA?.id,
+        })
+        .select()
+        .single();
+
+      expect(linkAErr).toBeNull();
+      expect(linkA?.project_id).toBe(projA?.id);
+
+      // User B cannot see User A's link
+      const { data: linksSeenByB } = await userB.client
+        .from('project_objectives')
+        .select('*')
+        .eq('project_id', projA?.id);
+      expect(linksSeenByB).toHaveLength(0);
+
+      // Cross-workspace rejection: User A cannot link their project to User B's project or vice versa
+      const { error: crossLinkErr } = await userA.client.from('project_objectives').insert({
+        workspace_id: userA.workspaceId,
+        project_id: projB?.id, // User B's project with User A's workspace
+        objective_id: objA?.id,
+      });
+      expect(crossLinkErr).not.toBeNull();
+    });
+
+    it('enforces isolation and cross-workspace rejection on project_key_results', async () => {
+      const { userA, userB } = ctx;
+
+      const { data: cycleA } = await userA.client
+        .from('cycles')
+        .insert({
+          workspace_id: userA.workspaceId,
+          name: 'Cycle A for KR Link',
+          cycle_type: 'quarterly',
+          start_date: '2026-10-01',
+          end_date: '2026-12-31',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      const { data: objA } = await userA.client
+        .from('objectives')
+        .insert({
+          workspace_id: userA.workspaceId,
+          cycle_id: cycleA?.id,
+          title: 'Objective A for KR Link',
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        })
+        .select()
+        .single();
+
+      const { data: krA } = await userA.client
+        .from('key_results')
+        .insert({
+          workspace_id: userA.workspaceId,
+          objective_id: objA?.id,
+          title: 'KR A for Project Link',
+          metric_type: 'numeric',
+          baseline_value: 0,
+          current_value: 0,
+          target_value: 100,
+          unit: 'units',
+          direction: 'increase',
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        })
+        .select()
+        .single();
+
+      const { data: projA } = await userA.client
+        .from('projects')
+        .insert({
+          workspace_id: userA.workspaceId,
+          title: 'Project A for KR Link',
+        })
+        .select()
+        .single();
+
+      const { data: projB } = await userB.client
+        .from('projects')
+        .insert({
+          workspace_id: userB.workspaceId,
+          title: 'Project B for KR Link',
+        })
+        .select()
+        .single();
+
+      // Valid link in User A's workspace
+      const { data: linkA, error: linkAErr } = await userA.client
+        .from('project_key_results')
+        .insert({
+          workspace_id: userA.workspaceId,
+          project_id: projA?.id,
+          key_result_id: krA?.id,
+        })
+        .select()
+        .single();
+
+      expect(linkAErr).toBeNull();
+      expect(linkA?.project_id).toBe(projA?.id);
+
+      // User B cannot see it
+      const { data: linksB } = await userB.client
+        .from('project_key_results')
+        .select('*')
+        .eq('project_id', projA?.id);
+      expect(linksB).toHaveLength(0);
+
+      // Cross-workspace composite FK rejection
+      const { error: crossErr } = await userA.client.from('project_key_results').insert({
+        workspace_id: userA.workspaceId,
+        project_id: projB?.id,
+        key_result_id: krA?.id,
+      });
+      expect(crossErr).not.toBeNull();
+    });
+
+    it('enforces isolation on task_labels', async () => {
+      const { userA, userB } = ctx;
+
+      const { data: taskA } = await userA.client
+        .from('tasks')
+        .insert({
+          workspace_id: userA.workspaceId,
+          title: 'Task for Labeling A',
+        })
+        .select()
+        .single();
+
+      const { data: labelA } = await userA.client
+        .from('labels')
+        .insert({
+          workspace_id: userA.workspaceId,
+          name: 'Backend Dev',
+        })
+        .select()
+        .single();
+
+      const { data: labelB } = await userB.client
+        .from('labels')
+        .insert({
+          workspace_id: userB.workspaceId,
+          name: 'Frontend Dev',
+        })
+        .select()
+        .single();
+
+      // Valid task_label link
+      const { data: tlA, error: tlAErr } = await userA.client
+        .from('task_labels')
+        .insert({
+          workspace_id: userA.workspaceId,
+          task_id: taskA?.id,
+          label_id: labelA?.id,
+        })
+        .select()
+        .single();
+
+      expect(tlAErr).toBeNull();
+      expect(tlA?.task_id).toBe(taskA?.id);
+
+      // Cross-workspace rejection: cannot link user A's task to user B's label
+      const { error: crossTlErr } = await userA.client.from('task_labels').insert({
+        workspace_id: userA.workspaceId,
+        task_id: taskA?.id,
+        label_id: labelB?.id,
+      });
+      expect(crossTlErr).not.toBeNull();
+    });
+  });
+
+  // 15. Task & Milestone Triggers & Constraints
+  describe('Task & Milestone Triggers & Constraints', () => {
+    it('sets completed_at on transition to done and clears it on reopen for tasks', async () => {
+      const { userA } = ctx;
+
+      // 1. Create task with status 'todo'
+      const { data: task, error: createErr } = await userA.client
+        .from('tasks')
+        .insert({
+          workspace_id: userA.workspaceId,
+          title: 'Completion Trigger Test Task',
+          status: 'todo',
+        })
+        .select()
+        .single();
+
+      expect(createErr).toBeNull();
+      expect(task?.completed_at).toBeNull();
+
+      // 2. Transition to 'done' -> completed_at is automatically populated
+      const { data: completedTask, error: completeErr } = await userA.client
+        .from('tasks')
+        .update({ status: 'done' })
+        .eq('id', task?.id)
+        .select()
+        .single();
+
+      expect(completeErr).toBeNull();
+      expect(completedTask?.completed_at).not.toBeNull();
+
+      // 3. Reopen task to 'in_progress' -> completed_at is automatically cleared
+      const { data: reopenedTask, error: reopenErr } = await userA.client
+        .from('tasks')
+        .update({ status: 'in_progress' })
+        .eq('id', task?.id)
+        .select()
+        .single();
+
+      expect(reopenErr).toBeNull();
+      expect(reopenedTask?.completed_at).toBeNull();
+    });
+
+    it('sets completed_at on transition to done and clears it on reopen for milestones', async () => {
+      const { userA } = ctx;
+
+      const { data: proj } = await userA.client
+        .from('projects')
+        .insert({
+          workspace_id: userA.workspaceId,
+          title: 'Milestone Trigger Test Project',
+        })
+        .select()
+        .single();
+
+      const { data: milestone, error: createErr } = await userA.client
+        .from('project_milestones')
+        .insert({
+          workspace_id: userA.workspaceId,
+          project_id: proj?.id,
+          title: 'Milestone Alpha',
+          status: 'open',
+        })
+        .select()
+        .single();
+
+      expect(createErr).toBeNull();
+      expect(milestone?.completed_at).toBeNull();
+
+      // Transition to 'done'
+      const { data: completedM } = await userA.client
+        .from('project_milestones')
+        .update({ status: 'done' })
+        .eq('id', milestone?.id)
+        .select()
+        .single();
+
+      expect(completedM?.completed_at).not.toBeNull();
+
+      // Reopen to 'open'
+      const { data: reopenedM } = await userA.client
+        .from('project_milestones')
+        .update({ status: 'open' })
+        .eq('id', milestone?.id)
+        .select()
+        .single();
+
+      expect(reopenedM?.completed_at).toBeNull();
+    });
+
+    it('increments task version on update for optimistic concurrency', async () => {
+      const { userA } = ctx;
+
+      const { data: task } = await userA.client
+        .from('tasks')
+        .insert({
+          workspace_id: userA.workspaceId,
+          title: 'Version Increment Task',
+        })
+        .select()
+        .single();
+
+      expect(task?.version).toBe(1);
+
+      const { data: updated1 } = await userA.client
+        .from('tasks')
+        .update({ title: 'Version Increment Task (Updated)' })
+        .eq('id', task?.id)
+        .select()
+        .single();
+
+      expect(updated1?.version).toBe(2);
+
+      const { data: updated2 } = await userA.client
+        .from('tasks')
+        .update({ priority: 'urgent' })
+        .eq('id', task?.id)
+        .select()
+        .single();
+
+      expect(updated2?.version).toBe(3);
+    });
+
+    it('enforces single-level subtask depth rule and rejects self-parenting', async () => {
+      const { userA } = ctx;
+
+      // 1. Create parent task
+      const { data: parentTask } = await userA.client
+        .from('tasks')
+        .insert({
+          workspace_id: userA.workspaceId,
+          title: 'Top Level Parent Task',
+        })
+        .select()
+        .single();
+
+      // Self-parenting rejected
+      const { error: selfParentErr } = await userA.client
+        .from('tasks')
+        .update({ parent_task_id: parentTask?.id })
+        .eq('id', parentTask?.id);
+      expect(selfParentErr).not.toBeNull();
+
+      // 2. Create valid level-1 subtask
+      const { data: subtask, error: subtaskErr } = await userA.client
+        .from('tasks')
+        .insert({
+          workspace_id: userA.workspaceId,
+          parent_task_id: parentTask?.id,
+          title: 'Level 1 Subtask',
+        })
+        .select()
+        .single();
+
+      expect(subtaskErr).toBeNull();
+      expect(subtask?.parent_task_id).toBe(parentTask?.id);
+
+      // 3. Attempt to create level-2 subtask (parent is already a subtask) -> rejected
+      const { error: level2Err } = await userA.client.from('tasks').insert({
+        workspace_id: userA.workspaceId,
+        parent_task_id: subtask?.id,
+        title: 'Level 2 Subtask (Should Fail)',
+      });
+
+      expect(level2Err).not.toBeNull();
+      expect(level2Err?.message).toContain('Subtask depth exceeded');
+
+      // 4. Attempt to make parentTask a subtask of another task -> rejected because it has children
+      const { data: grandParent } = await userA.client
+        .from('tasks')
+        .insert({
+          workspace_id: userA.workspaceId,
+          title: 'Another Top Level Task',
+        })
+        .select()
+        .single();
+
+      const { error: makeParentSubtaskErr } = await userA.client
+        .from('tasks')
+        .update({ parent_task_id: grandParent?.id })
+        .eq('id', parentTask?.id);
+
+      expect(makeParentSubtaskErr).not.toBeNull();
+      expect(makeParentSubtaskErr?.message).toContain(
+        'Task with subtasks cannot be made a subtask',
+      );
+    });
+
+    it('validates planned_end_at > planned_start_at', async () => {
+      const { userA } = ctx;
+
+      // Equal or earlier planned_end_at rejected
+      const { error: invalidTimeErr } = await userA.client.from('tasks').insert({
+        workspace_id: userA.workspaceId,
+        title: 'Invalid Time Task',
+        planned_start_at: '14:00:00',
+        planned_end_at: '13:00:00',
+      });
+      expect(invalidTimeErr).not.toBeNull();
+
+      const { error: equalTimeErr } = await userA.client.from('tasks').insert({
+        workspace_id: userA.workspaceId,
+        title: 'Equal Time Task',
+        planned_start_at: '14:00:00',
+        planned_end_at: '14:00:00',
+      });
+      expect(equalTimeErr).not.toBeNull();
+
+      // planned_end_at > planned_start_at succeeds
+      const { data: validTimeTask, error: validTimeErr } = await userA.client
+        .from('tasks')
+        .insert({
+          workspace_id: userA.workspaceId,
+          title: 'Valid Time Task',
+          planned_start_at: '14:00:00',
+          planned_end_at: '15:30:00',
+        })
+        .select()
+        .single();
+
+      expect(validTimeErr).toBeNull();
+      expect(validTimeTask?.planned_start_at).toBe('14:00:00');
+      expect(validTimeTask?.planned_end_at).toBe('15:30:00');
+    });
+
+    it('enforces case-insensitive uniqueness of label names per workspace', async () => {
+      const { userA } = ctx;
+
+      const { error: err1 } = await userA.client.from('labels').insert({
+        workspace_id: userA.workspaceId,
+        name: 'UniqueLabel',
+      });
+      expect(err1).toBeNull();
+
+      // Same workspace, different casing -> rejected
+      const { error: err2 } = await userA.client.from('labels').insert({
+        workspace_id: userA.workspaceId,
+        name: 'uniquelabel',
+      });
+      expect(err2).not.toBeNull();
+    });
+
+    it('rejects cross-workspace foreign key references for tasks', async () => {
+      const { userA, userB } = ctx;
+
+      // Project in User B's workspace
+      const { data: projB } = await userB.client
+        .from('projects')
+        .insert({
+          workspace_id: userB.workspaceId,
+          title: 'User B Project',
+        })
+        .select()
+        .single();
+
+      // Task in User A's workspace referencing User B's project -> rejected by composite FK
+      const { error: crossProjErr } = await userA.client.from('tasks').insert({
+        workspace_id: userA.workspaceId,
+        project_id: projB?.id,
+        title: 'Cross Project Task',
+      });
+      expect(crossProjErr).not.toBeNull();
+
+      // Task in User B's workspace
+      const { data: taskB } = await userB.client
+        .from('tasks')
+        .insert({
+          workspace_id: userB.workspaceId,
+          title: 'User B Task',
+        })
+        .select()
+        .single();
+
+      // Task in User A's workspace referencing User B's task as parent -> rejected by composite FK
+      const { error: crossParentErr } = await userA.client.from('tasks').insert({
+        workspace_id: userA.workspaceId,
+        parent_task_id: taskB?.id,
+        title: 'Cross Parent Task',
+      });
+      expect(crossParentErr).not.toBeNull();
+    });
+  });
 });

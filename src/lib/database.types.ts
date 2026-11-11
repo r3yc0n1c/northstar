@@ -324,6 +324,42 @@ export type Database = {
           },
         ];
       };
+      labels: {
+        Row: {
+          color: string;
+          created_at: string;
+          id: string;
+          name: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          color?: string;
+          created_at?: string;
+          id?: string;
+          name: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          color?: string;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'labels_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       objectives: {
         Row: {
           archived_at: string | null;
@@ -443,6 +479,362 @@ export type Database = {
           working_hours?: NonNullable<Json>;
         };
         Relationships: [];
+      };
+      project_key_results: {
+        Row: {
+          created_at: string;
+          key_result_id: string;
+          project_id: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          key_result_id: string;
+          project_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          key_result_id?: string;
+          project_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'project_key_results_kr_fk';
+            columns: ['workspace_id', 'key_result_id'];
+            isOneToOne: false;
+            referencedRelation: 'key_results';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'project_key_results_project_fk';
+            columns: ['workspace_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'projects';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'project_key_results_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      project_milestones: {
+        Row: {
+          completed_at: string | null;
+          created_at: string;
+          due_date: string | null;
+          id: string;
+          project_id: string;
+          sort_order: number;
+          status: string;
+          title: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          completed_at?: string | null;
+          created_at?: string;
+          due_date?: string | null;
+          id?: string;
+          project_id: string;
+          sort_order?: number;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          completed_at?: string | null;
+          created_at?: string;
+          due_date?: string | null;
+          id?: string;
+          project_id?: string;
+          sort_order?: number;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'project_milestones_project_fk';
+            columns: ['workspace_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'projects';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'project_milestones_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      project_objectives: {
+        Row: {
+          created_at: string;
+          objective_id: string;
+          project_id: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          objective_id: string;
+          project_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          objective_id?: string;
+          project_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'project_objectives_objective_fk';
+            columns: ['workspace_id', 'objective_id'];
+            isOneToOne: false;
+            referencedRelation: 'objectives';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'project_objectives_project_fk';
+            columns: ['workspace_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'projects';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'project_objectives_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      projects: {
+        Row: {
+          archived_at: string | null;
+          created_at: string;
+          description: string;
+          domain_id: string | null;
+          due_date: string | null;
+          id: string;
+          priority: string;
+          start_date: string | null;
+          status: string;
+          title: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          created_at?: string;
+          description?: string;
+          domain_id?: string | null;
+          due_date?: string | null;
+          id?: string;
+          priority?: string;
+          start_date?: string | null;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          created_at?: string;
+          description?: string;
+          domain_id?: string | null;
+          due_date?: string | null;
+          id?: string;
+          priority?: string;
+          start_date?: string | null;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'projects_domain_fk';
+            columns: ['workspace_id', 'domain_id'];
+            isOneToOne: false;
+            referencedRelation: 'domains';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'projects_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      task_labels: {
+        Row: {
+          created_at: string;
+          label_id: string;
+          task_id: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          label_id: string;
+          task_id: string;
+          workspace_id: string;
+        };
+        Update: {
+          created_at?: string;
+          label_id?: string;
+          task_id?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'task_labels_label_fk';
+            columns: ['workspace_id', 'label_id'];
+            isOneToOne: false;
+            referencedRelation: 'labels';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'task_labels_task_fk';
+            columns: ['workspace_id', 'task_id'];
+            isOneToOne: false;
+            referencedRelation: 'tasks';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'task_labels_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      tasks: {
+        Row: {
+          board_rank: number;
+          completed_at: string | null;
+          created_at: string;
+          created_by: string | null;
+          deleted_at: string | null;
+          description: string;
+          due_at: string | null;
+          due_date: string | null;
+          estimated_minutes: number | null;
+          id: string;
+          key_result_id: string | null;
+          parent_task_id: string | null;
+          planned_date: string | null;
+          planned_end_at: string | null;
+          planned_start_at: string | null;
+          priority: string;
+          project_id: string | null;
+          status: string;
+          title: string;
+          updated_at: string;
+          updated_by: string | null;
+          version: number;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          board_rank?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          deleted_at?: string | null;
+          description?: string;
+          due_at?: string | null;
+          due_date?: string | null;
+          estimated_minutes?: number | null;
+          id?: string;
+          key_result_id?: string | null;
+          parent_task_id?: string | null;
+          planned_date?: string | null;
+          planned_end_at?: string | null;
+          planned_start_at?: string | null;
+          priority?: string;
+          project_id?: string | null;
+          status?: string;
+          title: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+          workspace_id: string;
+        };
+        Update: {
+          board_rank?: number;
+          completed_at?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          deleted_at?: string | null;
+          description?: string;
+          due_at?: string | null;
+          due_date?: string | null;
+          estimated_minutes?: number | null;
+          id?: string;
+          key_result_id?: string | null;
+          parent_task_id?: string | null;
+          planned_date?: string | null;
+          planned_end_at?: string | null;
+          planned_start_at?: string | null;
+          priority?: string;
+          project_id?: string | null;
+          status?: string;
+          title?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          version?: number;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tasks_key_result_fk';
+            columns: ['workspace_id', 'key_result_id'];
+            isOneToOne: false;
+            referencedRelation: 'key_results';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tasks_parent_task_fk';
+            columns: ['workspace_id', 'parent_task_id'];
+            isOneToOne: false;
+            referencedRelation: 'tasks';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tasks_project_fk';
+            columns: ['workspace_id', 'project_id'];
+            isOneToOne: false;
+            referencedRelation: 'projects';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'tasks_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       workspaces: {
         Row: {
