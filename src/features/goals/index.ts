@@ -31,3 +31,5 @@ export * from './components/ObjectiveCard';
 export * from './components/KeyResultDialog';
 export * from './components/CheckInDialog';
 export * from './components/CheckInHistory';
+export * from './components/ProgressChart';
+export * from './components/ObjectiveDetailPage';

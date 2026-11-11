@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { ObjectivesList } from './ObjectivesList';
@@ -97,12 +98,14 @@ function renderObjectivesList(workspaceId = 'ws-123') {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <ObjectivesList
-        workspaceId={workspaceId}
-        selectedCycle={mockCycle}
-        cycles={[mockCycle]}
-        goals={[mockGoal]}
-      />
+      <MemoryRouter>
+        <ObjectivesList
+          workspaceId={workspaceId}
+          selectedCycle={mockCycle}
+          cycles={[mockCycle]}
+          goals={[mockGoal]}
+        />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }

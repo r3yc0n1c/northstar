@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Archive,
   ArchiveRestore,
@@ -6,6 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
   Edit2,
+  ExternalLink,
   Plus,
   Target,
   Trash2,
@@ -20,6 +22,7 @@ import type {
   ObjectivePriority,
   ObjectiveStatus,
 } from '../schema';
+import { OBJECTIVE_PRIORITY_BADGES, OBJECTIVE_STATUS_BADGES } from '../schema';
 import {
   useArchiveKeyResult,
   useCreateKeyResult,
@@ -42,21 +45,6 @@ interface ObjectiveCardProps {
   onRestore: (id: string) => void;
   onDelete: (id: string) => void;
 }
-
-const OBJECTIVE_STATUS_BADGES: Record<ObjectiveStatus, { label: string; className: string }> = {
-  draft: { label: 'Draft', className: 'text-text-3 bg-surface-2 border-border/50' },
-  active: { label: 'Active', className: 'text-highlight bg-accent/20 border-highlight/30' },
-  achieved: { label: 'Achieved', className: 'text-success bg-success/15 border-success/30' },
-  abandoned: { label: 'Abandoned', className: 'text-danger bg-danger/15 border-danger/30' },
-};
-
-const OBJECTIVE_PRIORITY_BADGES: Record<ObjectivePriority, { label: string; className: string }> = {
-  none: { label: 'None', className: 'text-text-3 bg-surface-2 border-border/50' },
-  low: { label: 'Low', className: 'text-text-2 bg-surface-2 border-border' },
-  medium: { label: 'Medium', className: 'text-highlight bg-accent/20 border-highlight/30' },
-  high: { label: 'High', className: 'text-warning bg-warning/10 border-warning/30' },
-  urgent: { label: 'Urgent', className: 'text-danger bg-danger/10 border-danger/30' },
-};
 
 export function ObjectiveCard({
   objective,
@@ -165,7 +153,13 @@ export function ObjectiveCard({
 
           <div className="space-y-1.5 min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h3 className="text-sm font-semibold text-text truncate">{objective.title}</h3>
+              <Link
+                to={`/goals/objectives/${objective.id}`}
+                className="text-sm font-semibold text-text truncate hover:text-highlight transition-colors flex items-center gap-1.5 group"
+              >
+                <span>{objective.title}</span>
+                <ExternalLink className="w-3 h-3 text-text-3 group-hover:text-highlight transition-colors shrink-0" />
+              </Link>
 
               <Badge
                 variant="secondary"
@@ -235,6 +229,17 @@ export function ObjectiveCard({
               <Plus className="w-3.5 h-3.5" />
               <span>Add KR</span>
             </Button>
+          )}
+
+          {!isArchived && (
+            <Link
+              to={`/goals/objectives/${objective.id}`}
+              className="inline-flex items-center justify-center h-8 px-2.5 rounded-[6px] text-xs font-medium text-text-2 hover:text-text hover:bg-surface-2 border border-border/40 transition-colors gap-1"
+              aria-label={`View details for ${objective.title}`}
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Details</span>
+            </Link>
           )}
 
           {!isArchived && (

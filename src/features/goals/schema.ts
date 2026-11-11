@@ -298,8 +298,29 @@ export type UpdateCycleInput = z.infer<typeof updateCycleSchema>;
 export const OBJECTIVE_STATUSES = ['draft', 'active', 'achieved', 'abandoned'] as const;
 export type ObjectiveStatus = (typeof OBJECTIVE_STATUSES)[number];
 
+export const OBJECTIVE_STATUS_BADGES: Record<
+  ObjectiveStatus,
+  { label: string; className: string }
+> = {
+  draft: { label: 'Draft', className: 'text-text-3 bg-surface-2 border-border/50' },
+  active: { label: 'Active', className: 'text-highlight bg-accent/20 border-highlight/30' },
+  achieved: { label: 'Achieved', className: 'text-success bg-success/15 border-success/30' },
+  abandoned: { label: 'Abandoned', className: 'text-danger bg-danger/15 border-danger/30' },
+};
+
 export const OBJECTIVE_PRIORITIES = ['none', 'low', 'medium', 'high', 'urgent'] as const;
 export type ObjectivePriority = (typeof OBJECTIVE_PRIORITIES)[number];
+
+export const OBJECTIVE_PRIORITY_BADGES: Record<
+  ObjectivePriority,
+  { label: string; className: string }
+> = {
+  none: { label: 'None', className: 'text-text-3 bg-surface-2 border-border/50' },
+  low: { label: 'Low', className: 'text-text-2 bg-surface-2 border-border' },
+  medium: { label: 'Medium', className: 'text-highlight bg-accent/20 border-highlight/30' },
+  high: { label: 'High', className: 'text-warning bg-warning/10 border-warning/30' },
+  urgent: { label: 'Urgent', className: 'text-danger bg-danger/10 border-danger/30' },
+};
 
 export const objectiveSchema = z.object({
   id: z.string().uuid(),
