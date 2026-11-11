@@ -1,14 +1,7 @@
 import { useState } from 'react';
-import { Archive, ArchiveRestore, Edit2, Plus, Target, Trash2 } from 'lucide-react';
-import { Badge, Button, EmptyState, Label, Skeleton, Switch } from '@/components/ui';
-import type {
-  CreateObjectiveInput,
-  Cycle,
-  Goal,
-  Objective,
-  ObjectivePriority,
-  ObjectiveStatus,
-} from '../schema';
+import { Plus, Target } from 'lucide-react';
+import { Button, EmptyState, Label, Skeleton, Switch } from '@/components/ui';
+import type { CreateObjectiveInput, Cycle, Goal, Objective } from '../schema';
 import {
   useArchiveObjective,
   useCreateObjective,
@@ -18,6 +11,7 @@ import {
   useUpdateObjective,
 } from '../hooks/useObjectives';
 import { ObjectiveDialog } from './ObjectiveDialog';
+import { ObjectiveCard } from './ObjectiveCard';
 
 interface ObjectivesListProps {
   workspaceId?: string;
@@ -25,21 +19,6 @@ interface ObjectivesListProps {
   cycles: Cycle[];
   goals: Goal[];
 }
-
-const OBJECTIVE_STATUS_BADGES: Record<ObjectiveStatus, { label: string; className: string }> = {
-  draft: { label: 'Draft', className: 'text-text-3 bg-surface-2 border-border/50' },
-  active: { label: 'Active', className: 'text-highlight bg-accent/20 border-highlight/30' },
-  achieved: { label: 'Achieved', className: 'text-success bg-success/15 border-success/30' },
-  abandoned: { label: 'Abandoned', className: 'text-danger bg-danger/15 border-danger/30' },
-};
-
-const OBJECTIVE_PRIORITY_BADGES: Record<ObjectivePriority, { label: string; className: string }> = {
-  none: { label: 'None', className: 'text-text-3 bg-surface-2 border-border/50' },
-  low: { label: 'Low', className: 'text-text-2 bg-surface-2 border-border' },
-  medium: { label: 'Medium', className: 'text-highlight bg-accent/20 border-highlight/30' },
-  high: { label: 'High', className: 'text-warning bg-warning/10 border-warning/30' },
-  urgent: { label: 'Urgent', className: 'text-danger bg-danger/10 border-danger/30' },
-};
 
 export function ObjectivesList({ workspaceId, selectedCycle, cycles, goals }: ObjectivesListProps) {
   const [showArchived, setShowArchived] = useState(false);
@@ -175,145 +154,19 @@ export function ObjectivesList({ workspaceId, selectedCycle, cycles, goals }: Ob
       {/* Objectives Cards List */}
       {!isLoading && objectives.length > 0 && (
         <div className="space-y-4" data-testid="objectives-list">
-          {objectives.map((obj) => {
-            const parentGoal = obj.goal_id ? goalsMap.get(obj.goal_id) : null;
-            const statusBadge = OBJECTIVE_STATUS_BADGES[(obj.status as ObjectiveStatus) || 'draft'];
-            const priorityBadge =
-              OBJECTIVE_PRIORITY_BADGES[(obj.priority as ObjectivePriority) || 'none'];
-            const isArchived = Boolean(obj.archived_at);
-
-            return (
-              <article
-                key={obj.id}
-                data-testid={`objective-item-${obj.id}`}
-                className={`p-4 rounded-[10px] border transition-colors flex flex-col gap-3 ${
-                  isArchived
-                    ? 'bg-surface/40 border-border/60 opacity-60'
-                    : 'bg-surface border-border hover:border-border/90'
-                }`}
-              >
-                {/* Header row: title, badges, and actions */}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <div className="w-9 h-9 rounded-[8px] bg-surface-2 border border-border flex items-center justify-center text-highlight shrink-0 mt-0.5">
-                      <Target className="w-4 h-4" />
-                    </div>
-
-                    <div className="space-y-1 min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-sm font-semibold text-text truncate">{obj.title}</h3>
-
-                        <Badge
-                          variant="secondary"
-                          className={`text-[10px] font-mono-num font-medium border px-1.5 py-0.2 ${statusBadge.className}`}
-                        >
-                          {statusBadge.label}
-                        </Badge>
-
-                        {obj.priority !== 'none' && (
-                          <Badge
-                            variant="secondary"
-                            className={`text-[10px] font-mono-num font-medium border px-1.5 py-0.2 ${priorityBadge.className}`}
-                          >
-                            {priorityBadge.label}
-                          </Badge>
-                        )}
-
-                        {obj.confidence !== null && obj.confidence !== undefined && (
-                          <span className="font-mono-num text-[11px] px-1.5 py-0.2 rounded bg-surface-2 text-highlight border border-border">
-                            Conf: {obj.confidence}/10
-                          </span>
-                        )}
-
-                        {parentGoal && (
-                          <span className="text-[11px] font-medium text-text-2 bg-surface-2 border border-border px-2 py-0.5 rounded truncate max-w-[160px]">
-                            Goal: {parentGoal.title}
-                          </span>
-                        )}
-
-                        {isArchived && (
-                          <span className="font-mono-num text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-2 text-warning border border-border">
-                            Archived
-                          </span>
-                        )}
-                      </div>
-
-                      {obj.description && (
-                        <p className="text-xs text-text-2 line-clamp-2">{obj.description}</p>
-                      )}
-
-                      <div className="flex items-center gap-3 pt-1 text-[11px] font-mono-num text-text-3">
-                        <span>
-                          {obj.start_date} – {obj.due_date}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 shrink-0 self-end sm:self-start">
-                    {!isArchived && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleOpenEdit(obj)}
-                        className="text-xs text-text-2 hover:text-text gap-1 h-8"
-                        aria-label={`Edit ${obj.title}`}
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                        <span>Edit</span>
-                      </Button>
-                    )}
-
-                    {isArchived ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => restoreObjectiveMut(obj.id)}
-                        className="text-xs text-highlight hover:text-text gap-1 h-8"
-                        aria-label={`Restore ${obj.title}`}
-                      >
-                        <ArchiveRestore className="w-3.5 h-3.5" />
-                        <span>Restore</span>
-                      </Button>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => archiveObjectiveMut(obj.id)}
-                        className="text-xs text-text-3 hover:text-danger gap-1 h-8"
-                        aria-label={`Archive ${obj.title}`}
-                      >
-                        <Archive className="w-3.5 h-3.5" />
-                        <span>Archive</span>
-                      </Button>
-                    )}
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => deleteObjectiveMut(obj.id)}
-                      className="h-8 w-8 text-text-3 hover:text-danger"
-                      aria-label={`Delete ${obj.title}`}
-                      title="Delete objective"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Key results placeholder row (preparing for NS-25) */}
-                <div className="mt-2 pt-2 border-t border-border/50 flex items-center justify-between text-xs text-text-3">
-                  <span className="italic">No key results yet.</span>
-                  <span className="text-[11px] font-mono-num text-highlight">0 KRs linked</span>
-                </div>
-              </article>
-            );
-          })}
+          {objectives.map((obj) => (
+            <ObjectiveCard
+              key={obj.id}
+              objective={obj}
+              workspaceId={workspaceId}
+              parentGoal={obj.goal_id ? goalsMap.get(obj.goal_id) : null}
+              showArchived={showArchived}
+              onEdit={handleOpenEdit}
+              onArchive={(id) => archiveObjectiveMut(id)}
+              onRestore={(id) => restoreObjectiveMut(id)}
+              onDelete={(id) => deleteObjectiveMut(id)}
+            />
+          ))}
         </div>
       )}
 

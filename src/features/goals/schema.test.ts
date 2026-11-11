@@ -3,11 +3,14 @@ import {
   createCycleSchema,
   createDomainSchema,
   createGoalSchema,
+  createKeyResultSchema,
   createObjectiveSchema,
   domainSchema,
+  keyResultSchema,
   objectiveSchema,
   reorderDomainsSchema,
   updateDomainSchema,
+  updateKeyResultSchema,
   updateObjectiveSchema,
   visionSchema,
 } from './schema';
@@ -383,6 +386,172 @@ describe('Goals & Life Areas Schemas', () => {
         due_date: '2026-10-01',
       });
       expect(invalid.success).toBe(false);
+    });
+  });
+
+  describe('keyResultSchema', () => {
+    it('validates a complete key result database record', () => {
+      const record = {
+        id: 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
+        workspace_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        objective_id: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
+        title: 'Reach $100k ARR',
+        description: 'Self-sustaining business',
+        metric_type: 'numeric',
+        baseline_value: 0,
+        current_value: 25000,
+        target_value: 100000,
+        unit: 'USD',
+        currency_code: 'USD',
+        direction: 'increase',
+        confidence: 8,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+        archived_at: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      const result = keyResultSchema.safeParse(record);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('createKeyResultSchema', () => {
+    it('accepts valid numeric increase key result', () => {
+      const valid = {
+        objective_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Acquire 50 paying users',
+        metric_type: 'numeric',
+        baseline_value: 0,
+        current_value: 10,
+        target_value: 50,
+        unit: 'users',
+        direction: 'increase',
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      };
+      const result = createKeyResultSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts valid numeric decrease key result', () => {
+      const valid = {
+        objective_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Reduce average response time to 100ms',
+        metric_type: 'numeric',
+        baseline_value: 450,
+        current_value: 200,
+        target_value: 100,
+        unit: 'ms',
+        direction: 'decrease',
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      };
+      const result = createKeyResultSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts valid binary key result with baseline=0 and target=1', () => {
+      const valid = {
+        objective_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Pass SOC 2 Type II audit',
+        metric_type: 'binary',
+        baseline_value: 0,
+        current_value: 0,
+        target_value: 1,
+        direction: null,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      };
+      const result = createKeyResultSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects numeric increase when target <= baseline', () => {
+      const invalid = createKeyResultSchema.safeParse({
+        objective_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Impossible increase',
+        metric_type: 'numeric',
+        baseline_value: 100,
+        current_value: 50,
+        target_value: 50,
+        direction: 'increase',
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(invalid.success).toBe(false);
+    });
+
+    it('rejects numeric decrease when target >= baseline', () => {
+      const invalid = createKeyResultSchema.safeParse({
+        objective_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Impossible decrease',
+        metric_type: 'numeric',
+        baseline_value: 50,
+        current_value: 80,
+        target_value: 100,
+        direction: 'decrease',
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(invalid.success).toBe(false);
+    });
+
+    it('rejects binary key result with invalid baseline or target or direction', () => {
+      const invalidBaseline = createKeyResultSchema.safeParse({
+        objective_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Invalid binary',
+        metric_type: 'binary',
+        baseline_value: 1,
+        current_value: 1,
+        target_value: 2,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(invalidBaseline.success).toBe(false);
+
+      const invalidDirection = createKeyResultSchema.safeParse({
+        objective_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Binary with direction',
+        metric_type: 'binary',
+        baseline_value: 0,
+        current_value: 0,
+        target_value: 1,
+        direction: 'increase',
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      });
+      expect(invalidDirection.success).toBe(false);
+    });
+
+    it('rejects due_date before start_date', () => {
+      const invalid = createKeyResultSchema.safeParse({
+        objective_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        title: 'Time travel KR',
+        metric_type: 'numeric',
+        baseline_value: 0,
+        current_value: 10,
+        target_value: 50,
+        direction: 'increase',
+        start_date: '2026-12-31',
+        due_date: '2026-10-01',
+      });
+      expect(invalid.success).toBe(false);
+    });
+  });
+
+  describe('updateKeyResultSchema', () => {
+    it('accepts partial updates and archiving', () => {
+      const partial = updateKeyResultSchema.safeParse({
+        current_value: 35,
+        confidence: 9,
+      });
+      expect(partial.success).toBe(true);
+
+      const archive = updateKeyResultSchema.safeParse({
+        archived_at: new Date().toISOString(),
+      });
+      expect(archive.success).toBe(true);
     });
   });
 });

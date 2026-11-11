@@ -4,8 +4,12 @@ import type { TwoUserContext } from './auth';
 export interface CompositeFkConfig {
   foreignKeyColumn: string;
   parentTable: string;
-  createParentRowA: (ctx: TwoUserContext) => Record<string, unknown>;
-  createParentRowB: (ctx: TwoUserContext) => Record<string, unknown>;
+  createParentRowA: (
+    ctx: TwoUserContext,
+  ) => Promise<Record<string, unknown>> | Record<string, unknown>;
+  createParentRowB: (
+    ctx: TwoUserContext,
+  ) => Promise<Record<string, unknown>> | Record<string, unknown>;
 }
 
 export interface TableMatrixConfig<TRow extends Record<string, unknown> = Record<string, unknown>> {
@@ -43,17 +47,19 @@ export function testTableIsolation<TRow extends Record<string, unknown>>(
       if (config.compositeForeignKey) {
         const { parentTable, createParentRowA, createParentRowB } = config.compositeForeignKey;
 
+        const parentPayloadA = await createParentRowA(ctx);
         const { data: pA, error: pAErr } = await userA.client
           .from(parentTable)
-          .insert(createParentRowA(ctx))
+          .insert(parentPayloadA as never)
           .select()
           .single();
         expect(pAErr).toBeNull();
         parentA = pA as Record<string, unknown>;
 
+        const parentPayloadB = await createParentRowB(ctx);
         const { data: pB, error: pBErr } = await userB.client
           .from(parentTable)
-          .insert(createParentRowB(ctx))
+          .insert(parentPayloadB as never)
           .select()
           .single();
         expect(pBErr).toBeNull();

@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import fixtures from '../../fixtures/kr-progress.json';
 import { isSupabaseAvailable, setupTwoTestUsers, type TwoUserContext } from './harness/auth';
 import { testTableIsolation } from './harness/matrix';
 
@@ -317,6 +318,96 @@ describe.runIf(isLive)('Two-User RLS & Constraint Test Suite (Phase 1)', () => {
     () => ctx,
   );
 
+  // 8. Extensible Matrix Table: key_results (with composite foreign key to objectives)
+  testTableIsolation(
+    {
+      tableName: 'key_results',
+      compositeForeignKey: {
+        parentTable: 'objectives',
+        foreignKeyColumn: 'objective_id',
+        createParentRowA: async (context) => {
+          const { data: cycle } = await context.userA.client
+            .from('cycles')
+            .insert({
+              workspace_id: context.userA.workspaceId,
+              name: 'Parent Cycle for KR Isolation A',
+              cycle_type: 'quarterly',
+              start_date: '2026-10-01',
+              end_date: '2026-12-31',
+              status: 'active',
+            })
+            .select()
+            .single();
+
+          return {
+            workspace_id: context.userA.workspaceId,
+            cycle_id: cycle?.id,
+            title: 'Parent Objective for KR A',
+            status: 'active',
+            priority: 'high',
+            confidence: 8,
+            start_date: '2026-10-01',
+            due_date: '2026-12-31',
+          };
+        },
+        createParentRowB: async (context) => {
+          const { data: cycle } = await context.userB.client
+            .from('cycles')
+            .insert({
+              workspace_id: context.userB.workspaceId,
+              name: 'Parent Cycle for KR Isolation B',
+              cycle_type: 'quarterly',
+              start_date: '2026-10-01',
+              end_date: '2026-12-31',
+              status: 'active',
+            })
+            .select()
+            .single();
+
+          return {
+            workspace_id: context.userB.workspaceId,
+            cycle_id: cycle?.id,
+            title: 'Parent Objective for KR B',
+            status: 'active',
+            priority: 'medium',
+            confidence: 7,
+            start_date: '2026-10-01',
+            due_date: '2026-12-31',
+          };
+        },
+      },
+      createRowA: (context, parentA) => ({
+        workspace_id: context.userA.workspaceId,
+        objective_id: parentA?.id as string,
+        title: 'Acquire 100 Power Users A',
+        metric_type: 'numeric',
+        baseline_value: 0,
+        current_value: 25,
+        target_value: 100,
+        unit: 'users',
+        direction: 'increase',
+        confidence: 8,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      }),
+      createRowB: (context, parentB) => ({
+        workspace_id: context.userB.workspaceId,
+        objective_id: parentB?.id as string,
+        title: 'Launch SOC2 Compliance B',
+        metric_type: 'binary',
+        baseline_value: 0,
+        current_value: 0,
+        target_value: 1,
+        unit: '',
+        confidence: 9,
+        start_date: '2026-10-01',
+        due_date: '2026-12-31',
+      }),
+      updatePayloadA: { title: 'Compromised KR Title' },
+    },
+    () => ctx,
+  );
+
   // 8. NS-23: Goals and Cycles Constraints & Business Rules
   describe('NS-23: Goals and Cycles Constraints & Business Rules', () => {
     it('enforces cycles date constraint: end_date >= start_date', async () => {
@@ -497,6 +588,230 @@ describe.runIf(isLive)('Two-User RLS & Constraint Test Suite (Phase 1)', () => {
 
       expect(error).not.toBeNull();
       expect(error?.message).toMatch(/fk_objectives_goal_workspace|violates foreign key/i);
+    });
+  });
+
+  // 10. NS-25: Key Results SQL kr_progress & Check Constraints
+  describe('NS-25: Key Results SQL kr_progress & Check Constraints', () => {
+    describe('SQL kr_progress against shared fixtures', () => {
+      for (const testCase of fixtures.progressCases) {
+        it(`SQL kr_progress evaluates fixture: ${testCase.id} (${testCase.description})`, async () => {
+          const { userA } = ctx;
+          const { data, error } = await userA.client.rpc('kr_progress', {
+            baseline: testCase.baseline,
+            current: testCase.current,
+            target: testCase.target,
+            direction: testCase.direction,
+            metric_type: testCase.metricType,
+          });
+
+          expect(error).toBeNull();
+          expect(Number(data)).toBeCloseTo(testCase.expectedRaw, 2);
+        });
+      }
+    });
+
+    describe('key_results check constraints', () => {
+      it('enforces numeric metric rules: target <> baseline and direction consistency', async () => {
+        const { userA } = ctx;
+
+        // Set up cycle and objective for userA
+        const { data: cycle } = await userA.client
+          .from('cycles')
+          .insert({
+            workspace_id: userA.workspaceId,
+            name: 'KR Constraint Test Cycle',
+            cycle_type: 'quarterly',
+            start_date: '2026-10-01',
+            end_date: '2026-12-31',
+            status: 'active',
+          })
+          .select()
+          .single();
+
+        const { data: objective } = await userA.client
+          .from('objectives')
+          .insert({
+            workspace_id: userA.workspaceId,
+            cycle_id: cycle?.id,
+            title: 'KR Constraint Test Objective',
+            start_date: '2026-10-01',
+            due_date: '2026-12-31',
+          })
+          .select()
+          .single();
+
+        // 1. Target equals baseline rejected
+        const { error: equalErr } = await userA.client.from('key_results').insert({
+          workspace_id: userA.workspaceId,
+          objective_id: objective?.id,
+          title: 'Equal Baseline Target KR',
+          metric_type: 'numeric',
+          baseline_value: 100,
+          current_value: 100,
+          target_value: 100,
+          direction: 'increase',
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        });
+        expect(equalErr).not.toBeNull();
+        expect(equalErr?.message).toMatch(/key_results_numeric_metric_check/i);
+
+        // 2. Increase with target < baseline rejected
+        const { error: incErr } = await userA.client.from('key_results').insert({
+          workspace_id: userA.workspaceId,
+          objective_id: objective?.id,
+          title: 'Invalid Increase KR',
+          metric_type: 'numeric',
+          baseline_value: 100,
+          current_value: 80,
+          target_value: 50,
+          direction: 'increase',
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        });
+        expect(incErr).not.toBeNull();
+        expect(incErr?.message).toMatch(/key_results_numeric_metric_check/i);
+
+        // 3. Decrease with target > baseline rejected
+        const { error: decErr } = await userA.client.from('key_results').insert({
+          workspace_id: userA.workspaceId,
+          objective_id: objective?.id,
+          title: 'Invalid Decrease KR',
+          metric_type: 'numeric',
+          baseline_value: 50,
+          current_value: 80,
+          target_value: 100,
+          direction: 'decrease',
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        });
+        expect(decErr).not.toBeNull();
+        expect(decErr?.message).toMatch(/key_results_numeric_metric_check/i);
+      });
+
+      it('enforces binary metric rules: baseline=0, target=1, current in (0,1), direction=null', async () => {
+        const { userA } = ctx;
+
+        const { data: cycle } = await userA.client
+          .from('cycles')
+          .insert({
+            workspace_id: userA.workspaceId,
+            name: 'Binary KR Test Cycle',
+            cycle_type: 'quarterly',
+            start_date: '2026-10-01',
+            end_date: '2026-12-31',
+            status: 'active',
+          })
+          .select()
+          .single();
+
+        const { data: objective } = await userA.client
+          .from('objectives')
+          .insert({
+            workspace_id: userA.workspaceId,
+            cycle_id: cycle?.id,
+            title: 'Binary KR Test Objective',
+            start_date: '2026-10-01',
+            due_date: '2026-12-31',
+          })
+          .select()
+          .single();
+
+        // 1. Binary with direction not null rejected
+        const { error: dirErr } = await userA.client.from('key_results').insert({
+          workspace_id: userA.workspaceId,
+          objective_id: objective?.id,
+          title: 'Binary With Direction',
+          metric_type: 'binary',
+          baseline_value: 0,
+          current_value: 0,
+          target_value: 1,
+          direction: 'increase',
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        });
+        expect(dirErr).not.toBeNull();
+        expect(dirErr?.message).toMatch(/key_results_binary_metric_check/i);
+
+        // 2. Binary with current > 1 rejected
+        const { error: currErr } = await userA.client.from('key_results').insert({
+          workspace_id: userA.workspaceId,
+          objective_id: objective?.id,
+          title: 'Binary With Current 2',
+          metric_type: 'binary',
+          baseline_value: 0,
+          current_value: 2,
+          target_value: 1,
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        });
+        expect(currErr).not.toBeNull();
+        expect(currErr?.message).toMatch(/key_results_binary_metric_check/i);
+
+        // 3. Valid binary KR accepted
+        const { data: validBinary, error: validErr } = await userA.client
+          .from('key_results')
+          .insert({
+            workspace_id: userA.workspaceId,
+            objective_id: objective?.id,
+            title: 'Complete SOC2 Audit',
+            metric_type: 'binary',
+            baseline_value: 0,
+            current_value: 1,
+            target_value: 1,
+            start_date: '2026-10-01',
+            due_date: '2026-12-31',
+          })
+          .select()
+          .single();
+        expect(validErr).toBeNull();
+        expect(validBinary?.current_value).toBe(1);
+      });
+
+      it('enforces key_results date constraint: due_date >= start_date', async () => {
+        const { userA } = ctx;
+
+        const { data: cycle } = await userA.client
+          .from('cycles')
+          .insert({
+            workspace_id: userA.workspaceId,
+            name: 'KR Date Test Cycle',
+            cycle_type: 'quarterly',
+            start_date: '2026-10-01',
+            end_date: '2026-12-31',
+            status: 'active',
+          })
+          .select()
+          .single();
+
+        const { data: objective } = await userA.client
+          .from('objectives')
+          .insert({
+            workspace_id: userA.workspaceId,
+            cycle_id: cycle?.id,
+            title: 'KR Date Test Objective',
+            start_date: '2026-10-01',
+            due_date: '2026-12-31',
+          })
+          .select()
+          .single();
+
+        const { error } = await userA.client.from('key_results').insert({
+          workspace_id: userA.workspaceId,
+          objective_id: objective?.id,
+          title: 'Invalid Date KR',
+          metric_type: 'numeric',
+          baseline_value: 0,
+          current_value: 10,
+          target_value: 100,
+          direction: 'increase',
+          start_date: '2026-12-31',
+          due_date: '2026-10-01',
+        });
+        expect(error).not.toBeNull();
+        expect(error?.message).toMatch(/key_results_dates_order_check/i);
+      });
     });
   });
 });

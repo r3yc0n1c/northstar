@@ -1,0 +1,237 @@
+{
+  "progressCases": [
+    {
+      "id": "numeric-increase-at-baseline",
+      "description": "Numeric increase KR exactly at baseline",
+      "metricType": "numeric",
+      "baseline": 0,
+      "current": 0,
+      "target": 100,
+      "direction": "increase",
+      "expectedRaw": 0,
+      "expectedDisplayed": 0
+    },
+    {
+      "id": "numeric-increase-midway",
+      "description": "Numeric increase KR half-way towards target",
+      "metricType": "numeric",
+      "baseline": 10,
+      "current": 55,
+      "target": 100,
+      "direction": "increase",
+      "expectedRaw": 50,
+      "expectedDisplayed": 50
+    },
+    {
+      "id": "numeric-increase-at-target",
+      "description": "Numeric increase KR exactly at target",
+      "metricType": "numeric",
+      "baseline": 0,
+      "current": 100,
+      "target": 100,
+      "direction": "increase",
+      "expectedRaw": 100,
+      "expectedDisplayed": 100
+    },
+    {
+      "id": "numeric-increase-overshoot",
+      "description": "Numeric increase KR exceeding target (overshoot preserves raw and clamps displayed to 100)",
+      "metricType": "numeric",
+      "baseline": 0,
+      "current": 130,
+      "target": 100,
+      "direction": "increase",
+      "expectedRaw": 130,
+      "expectedDisplayed": 100
+    },
+    {
+      "id": "numeric-increase-below-baseline",
+      "description": "Numeric increase KR regressing below baseline (negative raw, clamps displayed to 0)",
+      "metricType": "numeric",
+      "baseline": 20,
+      "current": 10,
+      "target": 100,
+      "direction": "increase",
+      "expectedRaw": -12.5,
+      "expectedDisplayed": 0
+    },
+    {
+      "id": "numeric-decrease-at-baseline",
+      "description": "Numeric decrease KR at baseline (starting value before reduction)",
+      "metricType": "numeric",
+      "baseline": 100,
+      "current": 100,
+      "target": 20,
+      "direction": "decrease",
+      "expectedRaw": 0,
+      "expectedDisplayed": 0
+    },
+    {
+      "id": "numeric-decrease-midway",
+      "description": "Numeric decrease KR half-way towards target",
+      "metricType": "numeric",
+      "baseline": 100,
+      "current": 60,
+      "target": 20,
+      "direction": "decrease",
+      "expectedRaw": 50,
+      "expectedDisplayed": 50
+    },
+    {
+      "id": "numeric-decrease-at-target",
+      "description": "Numeric decrease KR exactly at target",
+      "metricType": "numeric",
+      "baseline": 100,
+      "current": 20,
+      "target": 20,
+      "direction": "decrease",
+      "expectedRaw": 100,
+      "expectedDisplayed": 100
+    },
+    {
+      "id": "numeric-decrease-overshoot",
+      "description": "Numeric decrease KR reducing beyond target (lower is better)",
+      "metricType": "numeric",
+      "baseline": 100,
+      "current": 10,
+      "target": 20,
+      "direction": "decrease",
+      "expectedRaw": 112.5,
+      "expectedDisplayed": 100
+    },
+    {
+      "id": "numeric-decrease-below-baseline",
+      "description": "Numeric decrease KR worsening above baseline (negative raw, clamps displayed to 0)",
+      "metricType": "numeric",
+      "baseline": 100,
+      "current": 120,
+      "target": 20,
+      "direction": "decrease",
+      "expectedRaw": -25,
+      "expectedDisplayed": 0
+    },
+    {
+      "id": "binary-not-achieved",
+      "description": "Binary KR incomplete (value = 0)",
+      "metricType": "binary",
+      "baseline": 0,
+      "current": 0,
+      "target": 1,
+      "direction": null,
+      "expectedRaw": 0,
+      "expectedDisplayed": 0
+    },
+    {
+      "id": "binary-achieved",
+      "description": "Binary KR complete (value = 1)",
+      "metricType": "binary",
+      "baseline": 0,
+      "current": 1,
+      "target": 1,
+      "direction": null,
+      "expectedRaw": 100,
+      "expectedDisplayed": 100
+    }
+  ],
+  "healthCases": [
+    {
+      "id": "health-today-before-start",
+      "description": "Today is before start date -> not_started",
+      "startDate": "2026-10-01",
+      "dueDate": "2026-12-31",
+      "today": "2026-09-20",
+      "progress": 0,
+      "expectedHealth": "not_started"
+    },
+    {
+      "id": "health-achieved-anytime",
+      "description": "Progress >= 100 is achieved regardless of timeline",
+      "startDate": "2026-10-01",
+      "dueDate": "2026-12-31",
+      "today": "2026-10-15",
+      "progress": 100,
+      "expectedHealth": "achieved"
+    },
+    {
+      "id": "health-on-track-exact",
+      "description": "Elapsed 50%, progress 50%, gap 0 <= 10 -> on_track",
+      "startDate": "2026-10-01",
+      "dueDate": "2026-10-31",
+      "today": "2026-10-16",
+      "progress": 50,
+      "expectedHealth": "on_track"
+    },
+    {
+      "id": "health-on-track-boundary",
+      "description": "Elapsed 50%, progress 40%, gap 10 <= 10 -> on_track",
+      "startDate": "2026-10-01",
+      "dueDate": "2026-10-31",
+      "today": "2026-10-16",
+      "progress": 40,
+      "expectedHealth": "on_track"
+    },
+    {
+      "id": "health-at-risk-boundary-lower",
+      "description": "Elapsed 50%, progress 39%, gap 11 (10 < gap <= 25) -> at_risk",
+      "startDate": "2026-10-01",
+      "dueDate": "2026-10-31",
+      "today": "2026-10-16",
+      "progress": 39,
+      "expectedHealth": "at_risk"
+    },
+    {
+      "id": "health-at-risk-boundary-upper",
+      "description": "Elapsed 50%, progress 25%, gap 25 <= 25 -> at_risk",
+      "startDate": "2026-10-01",
+      "dueDate": "2026-10-31",
+      "today": "2026-10-16",
+      "progress": 25,
+      "expectedHealth": "at_risk"
+    },
+    {
+      "id": "health-off-track",
+      "description": "Elapsed 50%, progress 20%, gap 30 > 25 -> off_track",
+      "startDate": "2026-10-01",
+      "dueDate": "2026-10-31",
+      "today": "2026-10-16",
+      "progress": 20,
+      "expectedHealth": "off_track"
+    },
+    {
+      "id": "health-today-after-due-incomplete",
+      "description": "Today is after due date, elapsed 100%, progress 60%, gap 40 -> off_track",
+      "startDate": "2026-10-01",
+      "dueDate": "2026-10-31",
+      "today": "2026-11-05",
+      "progress": 60,
+      "expectedHealth": "off_track"
+    },
+    {
+      "id": "health-start-equals-due-before",
+      "description": "Start == due date and today is before start -> not_started",
+      "startDate": "2026-10-15",
+      "dueDate": "2026-10-15",
+      "today": "2026-10-14",
+      "progress": 0,
+      "expectedHealth": "not_started"
+    },
+    {
+      "id": "health-start-equals-due-on-day",
+      "description": "Start == due date, today is that day, progress is achieved -> achieved",
+      "startDate": "2026-10-15",
+      "dueDate": "2026-10-15",
+      "today": "2026-10-15",
+      "progress": 100,
+      "expectedHealth": "achieved"
+    },
+    {
+      "id": "health-start-equals-due-on-day-zero-progress",
+      "description": "Start == due date, today is that day, progress 0%, elapsed 100%, gap 100 -> off_track",
+      "startDate": "2026-10-15",
+      "dueDate": "2026-10-15",
+      "today": "2026-10-15",
+      "progress": 0,
+      "expectedHealth": "off_track"
+    }
+  ]
+}
