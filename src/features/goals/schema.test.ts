@@ -7,7 +7,9 @@ import {
   createObjectiveSchema,
   domainSchema,
   keyResultSchema,
+  krCheckInSchema,
   objectiveSchema,
+  recordCheckInSchema,
   reorderDomainsSchema,
   updateDomainSchema,
   updateKeyResultSchema,
@@ -552,6 +554,63 @@ describe('Goals & Life Areas Schemas', () => {
         archived_at: new Date().toISOString(),
       });
       expect(archive.success).toBe(true);
+    });
+  });
+
+  describe('krCheckInSchema', () => {
+    it('validates a complete check-in database record', () => {
+      const record = {
+        id: 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
+        workspace_id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        key_result_id: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
+        value: 45,
+        raw_progress_percent: 45,
+        progress_percent: 45,
+        confidence: 8,
+        notes: 'Mid-quarter review',
+        evidence_url: 'https://example.com/evidence',
+        supersedes_id: null,
+        recorded_by: 'd0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+        recorded_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      };
+      const result = krCheckInSchema.safeParse(record);
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('recordCheckInSchema', () => {
+    it('accepts valid check-in input', () => {
+      const valid = {
+        key_result_id: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
+        value: 120,
+        confidence: 9,
+        notes: 'Completed sprint targets',
+        evidence_url: 'https://example.com/metrics',
+      };
+      const result = recordCheckInSchema.safeParse(valid);
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts valid correction input with supersedes_id', () => {
+      const validCorrection = {
+        key_result_id: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
+        value: 125,
+        confidence: 10,
+        notes: 'Correction: recalibrated sensor',
+        supersedes_id: 'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33',
+      };
+      const result = recordCheckInSchema.safeParse(validCorrection);
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects invalid evidence URL', () => {
+      const invalid = recordCheckInSchema.safeParse({
+        key_result_id: 'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22',
+        value: 50,
+        evidence_url: 'not-a-valid-url',
+      });
+      expect(invalid.success).toBe(false);
     });
   });
 });
