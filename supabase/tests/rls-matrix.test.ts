@@ -408,6 +408,120 @@ describe.runIf(isLive)('Two-User RLS & Constraint Test Suite (Phase 1)', () => {
     () => ctx,
   );
 
+  // 9. Extensible Matrix Table: kr_check_ins (with composite foreign key to key_results, immutable = true)
+  testTableIsolation(
+    {
+      tableName: 'kr_check_ins',
+      immutable: true,
+      compositeForeignKey: {
+        parentTable: 'key_results',
+        foreignKeyColumn: 'key_result_id',
+        createParentRowA: async (context) => {
+          const { data: cycle } = await context.userA.client
+            .from('cycles')
+            .insert({
+              workspace_id: context.userA.workspaceId,
+              name: 'Parent Cycle for Checkin Isolation A',
+              cycle_type: 'quarterly',
+              start_date: '2026-10-01',
+              end_date: '2026-12-31',
+              status: 'active',
+            })
+            .select()
+            .single();
+
+          const { data: objective } = await context.userA.client
+            .from('objectives')
+            .insert({
+              workspace_id: context.userA.workspaceId,
+              cycle_id: cycle?.id,
+              title: 'Parent Objective for Checkin A',
+              start_date: '2026-10-01',
+              due_date: '2026-12-31',
+            })
+            .select()
+            .single();
+
+          return {
+            workspace_id: context.userA.workspaceId,
+            objective_id: objective?.id,
+            title: 'Parent KR for Checkin A',
+            metric_type: 'numeric',
+            baseline_value: 0,
+            current_value: 10,
+            target_value: 100,
+            unit: 'users',
+            direction: 'increase',
+            start_date: '2026-10-01',
+            due_date: '2026-12-31',
+          };
+        },
+        createParentRowB: async (context) => {
+          const { data: cycle } = await context.userB.client
+            .from('cycles')
+            .insert({
+              workspace_id: context.userB.workspaceId,
+              name: 'Parent Cycle for Checkin Isolation B',
+              cycle_type: 'quarterly',
+              start_date: '2026-10-01',
+              end_date: '2026-12-31',
+              status: 'active',
+            })
+            .select()
+            .single();
+
+          const { data: objective } = await context.userB.client
+            .from('objectives')
+            .insert({
+              workspace_id: context.userB.workspaceId,
+              cycle_id: cycle?.id,
+              title: 'Parent Objective for Checkin B',
+              start_date: '2026-10-01',
+              due_date: '2026-12-31',
+            })
+            .select()
+            .single();
+
+          return {
+            workspace_id: context.userB.workspaceId,
+            objective_id: objective?.id,
+            title: 'Parent KR for Checkin B',
+            metric_type: 'numeric',
+            baseline_value: 0,
+            current_value: 20,
+            target_value: 100,
+            unit: 'users',
+            direction: 'increase',
+            start_date: '2026-10-01',
+            due_date: '2026-12-31',
+          };
+        },
+      },
+      createRowA: (context, parentA) => ({
+        workspace_id: context.userA.workspaceId,
+        key_result_id: parentA?.id as string,
+        value: 25,
+        raw_progress_percent: 25,
+        progress_percent: 25,
+        confidence: 8,
+        notes: 'Initial progress checkin A',
+        recorded_by: context.userA.id,
+      }),
+      createRowB: (context, parentB) => ({
+        workspace_id: context.userB.workspaceId,
+        key_result_id: parentB?.id as string,
+        value: 30,
+        raw_progress_percent: 30,
+        progress_percent: 30,
+        confidence: 7,
+        notes: 'Initial progress checkin B',
+        recorded_by: context.userB.id,
+      }),
+      updatePayloadA: { notes: 'Attempted to edit check-in notes' },
+    },
+    () => ctx,
+  );
+
   // 8. NS-23: Goals and Cycles Constraints & Business Rules
   describe('NS-23: Goals and Cycles Constraints & Business Rules', () => {
     it('enforces cycles date constraint: end_date >= start_date', async () => {
@@ -812,6 +926,137 @@ describe.runIf(isLive)('Two-User RLS & Constraint Test Suite (Phase 1)', () => {
         expect(error).not.toBeNull();
         expect(error?.message).toMatch(/key_results_dates_order_check/i);
       });
+    });
+  });
+
+  // 11. NS-26: Key Results Append-Only Check-ins & Atomic RPC
+  describe('NS-26: Key Results Append-Only Check-ins & Atomic RPC', () => {
+    it('executes record_kr_check_in and atomically updates key_results.current_value', async () => {
+      const { userA } = ctx;
+
+      const { data: cycle } = await userA.client
+        .from('cycles')
+        .insert({
+          workspace_id: userA.workspaceId,
+          name: 'Checkin Cycle',
+          cycle_type: 'quarterly',
+          start_date: '2026-10-01',
+          end_date: '2026-12-31',
+          status: 'active',
+        })
+        .select()
+        .single();
+
+      const { data: objective } = await userA.client
+        .from('objectives')
+        .insert({
+          workspace_id: userA.workspaceId,
+          cycle_id: cycle?.id,
+          title: 'Checkin Test Objective',
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        })
+        .select()
+        .single();
+
+      const { data: kr } = await userA.client
+        .from('key_results')
+        .insert({
+          workspace_id: userA.workspaceId,
+          objective_id: objective?.id,
+          title: 'Reach 1,000 active users',
+          metric_type: 'numeric',
+          baseline_value: 0,
+          current_value: 0,
+          target_value: 1000,
+          unit: 'users',
+          direction: 'increase',
+          start_date: '2026-10-01',
+          due_date: '2026-12-31',
+        })
+        .select()
+        .single();
+
+      expect(kr?.current_value).toBe(0);
+
+      // 1. Record first check-in: value = 400
+      const { data: checkIn1, error: err1 } = await userA.client.rpc('record_kr_check_in', {
+        p_key_result_id: kr?.id,
+        p_value: 400,
+        p_confidence: 8,
+        p_notes: 'Mid-quarter milestone reached',
+        p_evidence_url: 'https://example.com/telemetry',
+      });
+
+      expect(err1).toBeNull();
+      expect(Number(checkIn1?.value)).toBe(400);
+      expect(Number(checkIn1?.progress_percent)).toBe(40);
+      expect(Number(checkIn1?.raw_progress_percent)).toBe(40);
+
+      // Verify key_results.current_value is atomically updated to 400 and confidence to 8
+      const { data: updatedKr1 } = await userA.client
+        .from('key_results')
+        .select('*')
+        .eq('id', kr?.id)
+        .single();
+      expect(Number(updatedKr1?.current_value)).toBe(400);
+      expect(updatedKr1?.confidence).toBe(8);
+
+      // 2. Correction: record second check-in with supersedes_id
+      const { data: correction, error: err2 } = await userA.client.rpc('record_kr_check_in', {
+        p_key_result_id: kr?.id,
+        p_value: 450,
+        p_confidence: 9,
+        p_notes: 'Correction: verified telemetry counted 50 additional active users',
+        p_supersedes_id: checkIn1?.id,
+      });
+
+      expect(err2).toBeNull();
+      expect(Number(correction?.value)).toBe(450);
+      expect(correction?.supersedes_id).toBe(checkIn1?.id);
+
+      // Verify key_results.current_value is updated to latest non-superseded value (450)
+      const { data: updatedKr2 } = await userA.client
+        .from('key_results')
+        .select('*')
+        .eq('id', kr?.id)
+        .single();
+      expect(Number(updatedKr2?.current_value)).toBe(450);
+      expect(updatedKr2?.confidence).toBe(9);
+
+      // Verify both check-ins remain in database (append-only history preserved)
+      const { data: history } = await userA.client
+        .from('kr_check_ins')
+        .select('*')
+        .eq('key_result_id', kr?.id)
+        .order('recorded_at', { ascending: false });
+      expect(history).toHaveLength(2);
+    });
+
+    it('denies direct UPDATE and DELETE on kr_check_ins', async () => {
+      const { userA } = ctx;
+
+      // Select existing check-in row
+      const { data: checkIns } = await userA.client.from('kr_check_ins').select('*').limit(1);
+      if (checkIns && checkIns.length > 0) {
+        const checkInId = checkIns[0]?.id;
+
+        // Direct update denied
+        const { data: updated } = await userA.client
+          .from('kr_check_ins')
+          .update({ notes: 'Hacked Notes' })
+          .eq('id', checkInId)
+          .select();
+        expect(updated ?? []).toHaveLength(0);
+
+        // Direct delete denied
+        const { data: deleted } = await userA.client
+          .from('kr_check_ins')
+          .delete()
+          .eq('id', checkInId)
+          .select();
+        expect(deleted ?? []).toHaveLength(0);
+      }
     });
   });
 });

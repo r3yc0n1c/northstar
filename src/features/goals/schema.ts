@@ -609,3 +609,48 @@ export const updateKeyResultSchema = z
   );
 
 export type UpdateKeyResultInput = z.infer<typeof updateKeyResultSchema>;
+
+// ==========================================
+// CHECK-IN SCHEMAS
+// ==========================================
+
+export const krCheckInSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid(),
+  key_result_id: z.string().uuid(),
+  value: z.number(),
+  raw_progress_percent: z.number(),
+  progress_percent: z.number(),
+  confidence: z.number().int().min(1).max(10).nullable().optional(),
+  notes: z.string().default(''),
+  evidence_url: z.string().url('Evidence URL must be a valid URL').nullable().optional(),
+  supersedes_id: z.string().uuid().nullable().optional(),
+  recorded_by: z.string().uuid(),
+  recorded_at: z.string(),
+  created_at: z.string(),
+});
+
+export type KrCheckIn = z.infer<typeof krCheckInSchema>;
+
+export const recordCheckInSchema = z.object({
+  key_result_id: z.string().uuid('Key Result ID must be a valid UUID'),
+  value: z.number(),
+  confidence: z
+    .number()
+    .int('Confidence must be an integer')
+    .min(1, 'Confidence must be between 1 and 10')
+    .max(10, 'Confidence must be between 1 and 10')
+    .nullable()
+    .optional(),
+  notes: z.string().trim().max(1000, 'Notes must be 1,000 characters or less').default(''),
+  evidence_url: z
+    .string()
+    .trim()
+    .url('Evidence URL must be a valid URL')
+    .or(z.literal(''))
+    .nullable()
+    .optional(),
+  supersedes_id: z.string().uuid().nullable().optional(),
+});
+
+export type RecordCheckInInput = z.infer<typeof recordCheckInSchema>;

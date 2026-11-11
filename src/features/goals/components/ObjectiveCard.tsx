@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Archive,
   ArchiveRestore,
+  CheckCircle,
   ChevronDown,
   ChevronRight,
   Edit2,
@@ -27,7 +28,9 @@ import {
   useRestoreKeyResult,
   useUpdateKeyResult,
 } from '../hooks/useKeyResults';
+import { useRecordCheckIn } from '../hooks/useCheckIns';
 import { KeyResultDialog } from './KeyResultDialog';
+import { CheckInDialog } from './CheckInDialog';
 
 interface ObjectiveCardProps {
   objective: Objective;
@@ -68,6 +71,7 @@ export function ObjectiveCard({
   const [isExpanded, setIsExpanded] = useState(true);
   const [isKrDialogOpen, setIsKrDialogOpen] = useState(false);
   const [editingKr, setEditingKr] = useState<KeyResult | null>(null);
+  const [checkingInKr, setCheckingInKr] = useState<KeyResult | null>(null);
 
   const { data: keyResults = [], isLoading: isLoadingKrs } = useKeyResults(workspaceId, {
     objectiveId: objective.id,
@@ -79,6 +83,8 @@ export function ObjectiveCard({
   const { mutateAsync: archiveKrMut } = useArchiveKeyResult(workspaceId);
   const { mutateAsync: restoreKrMut } = useRestoreKeyResult(workspaceId);
   const { mutateAsync: deleteKrMut } = useDeleteKeyResult(workspaceId);
+  const { mutateAsync: recordCheckInMut, isPending: isRecordingCheckIn } =
+    useRecordCheckIn(workspaceId);
 
   const isArchived = Boolean(objective.archived_at);
   const statusBadge = OBJECTIVE_STATUS_BADGES[(objective.status as ObjectiveStatus) || 'draft'];
@@ -441,6 +447,20 @@ export function ObjectiveCard({
                     {!isKrArchived && (
                       <Button
                         type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setCheckingInKr(kr)}
+                        className="text-xs gap-1 h-7 px-2 font-medium"
+                        aria-label={`Check in on ${kr.title}`}
+                      >
+                        <CheckCircle className="w-3 h-3 text-highlight" />
+                        <span>Check In</span>
+                      </Button>
+                    )}
+
+                    {!isKrArchived && (
+                      <Button
+                        type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenEditKr(kr)}
@@ -501,6 +521,18 @@ export function ObjectiveCard({
         onSave={handleSaveKr}
         isSaving={isCreatingKr || isUpdatingKr}
       />
+
+      {checkingInKr && (
+        <CheckInDialog
+          isOpen={Boolean(checkingInKr)}
+          onClose={() => setCheckingInKr(null)}
+          keyResult={checkingInKr}
+          onSave={async (input) => {
+            await recordCheckInMut(input);
+          }}
+          isSaving={isRecordingCheckIn}
+        />
+      )}
     </article>
   );
 }

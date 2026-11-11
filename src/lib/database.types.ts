@@ -253,6 +253,77 @@ export type Database = {
           },
         ];
       };
+      kr_check_ins: {
+        Row: {
+          confidence: number | null;
+          created_at: string;
+          evidence_url: string | null;
+          id: string;
+          key_result_id: string;
+          notes: string | null;
+          progress_percent: number;
+          raw_progress_percent: number;
+          recorded_at: string;
+          recorded_by: string;
+          supersedes_id: string | null;
+          value: number;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          confidence?: number | null;
+          created_at?: string;
+          evidence_url?: string | null;
+          id?: string;
+          key_result_id: string;
+          notes?: string | null;
+          progress_percent: number;
+          raw_progress_percent: number;
+          recorded_at?: string;
+          recorded_by: string;
+          supersedes_id?: string | null;
+          value: number;
+          workspace_id: string;
+        };
+        Update: {
+          confidence?: number | null;
+          created_at?: string;
+          evidence_url?: string | null;
+          id?: string;
+          key_result_id?: string;
+          notes?: string | null;
+          progress_percent?: number;
+          raw_progress_percent?: number;
+          recorded_at?: string;
+          recorded_by?: string;
+          supersedes_id?: string | null;
+          value?: number;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'fk_kr_check_ins_key_result_workspace';
+            columns: ['workspace_id', 'key_result_id'];
+            isOneToOne: false;
+            referencedRelation: 'key_results';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'kr_check_ins_supersedes_id_fkey';
+            columns: ['supersedes_id'];
+            isOneToOne: false;
+            referencedRelation: 'kr_check_ins';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'kr_check_ins_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       objectives: {
         Row: {
           archived_at: string | null;
@@ -424,6 +495,38 @@ export type Database = {
           target: number;
         };
         Returns: number;
+      };
+      record_kr_check_in: {
+        Args: {
+          p_confidence?: number;
+          p_evidence_url?: string;
+          p_key_result_id: string;
+          p_notes?: string;
+          p_recorded_at?: string;
+          p_supersedes_id?: string;
+          p_value: number;
+        };
+        Returns: {
+          confidence: number | null;
+          created_at: string;
+          evidence_url: string | null;
+          id: string;
+          key_result_id: string;
+          notes: string | null;
+          progress_percent: number;
+          raw_progress_percent: number;
+          recorded_at: string;
+          recorded_by: string;
+          supersedes_id: string | null;
+          value: number;
+          workspace_id: string;
+        };
+        SetofOptions: {
+          from: '*';
+          to: 'kr_check_ins';
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
       };
       validate_working_hours: { Args: { wh: Json }; Returns: boolean };
     };
