@@ -20,6 +20,7 @@ import { TodayPage } from './pages/TodayPage';
 import { InboxPage } from './pages/InboxPage';
 import { TasksPage } from './pages/TasksPage';
 import { GoalsPage } from './pages/GoalsPage';
+import { ObjectiveDetailPage } from './pages/ObjectiveDetailPage';
 import { ProjectsPage } from './pages/ProjectsPage';
 import { HabitsPage } from './pages/HabitsPage';
 import { ReviewsPage } from './pages/ReviewsPage';
@@ -66,6 +67,7 @@ export function App() {
                   <Route path="inbox" element={<InboxPage />} />
                   <Route path="tasks" element={<TasksPage />} />
                   <Route path="goals" element={<GoalsPage />} />
+                  <Route path="goals/objectives/:id" element={<ObjectiveDetailPage />} />
                   <Route path="projects" element={<ProjectsPage />} />
                   <Route path="habits" element={<HabitsPage />} />
                   <Route path="reviews" element={<ReviewsPage />} />
