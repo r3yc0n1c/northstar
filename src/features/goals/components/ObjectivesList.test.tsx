@@ -3,7 +3,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { ObjectivesList } from './ObjectivesList';
 import * as objectivesApi from '../api/objectives';
-import type { Cycle, Goal, Objective } from '../schema';
+import * as keyResultsApi from '../api/keyResults';
+import type { Cycle, Goal, KeyResult, Objective } from '../schema';
 
 vi.mock('../api/objectives', () => ({
   fetchObjectives: vi.fn(),
@@ -13,6 +14,16 @@ vi.mock('../api/objectives', () => ({
   archiveObjective: vi.fn(),
   restoreObjective: vi.fn(),
   deleteObjective: vi.fn(),
+}));
+
+vi.mock('../api/keyResults', () => ({
+  fetchKeyResults: vi.fn(),
+  fetchKeyResultById: vi.fn(),
+  createKeyResult: vi.fn(),
+  updateKeyResult: vi.fn(),
+  archiveKeyResult: vi.fn(),
+  restoreKeyResult: vi.fn(),
+  deleteKeyResult: vi.fn(),
 }));
 
 const mockCycle: Cycle = {
@@ -99,6 +110,7 @@ function renderObjectivesList(workspaceId = 'ws-123') {
 describe('ObjectivesList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(keyResultsApi.fetchKeyResults).mockResolvedValue([]);
   });
 
   it('renders objectives list with active counter and badges', async () => {
@@ -111,6 +123,39 @@ describe('ObjectivesList', () => {
     expect(screen.getByText('Goal: Grow ARR to $100k')).toBeInTheDocument();
     expect(screen.getByText('Conf: 8/10')).toBeInTheDocument();
     expect(screen.getByText('2 Active')).toBeInTheDocument();
+  });
+
+  it('renders key results inside objective card with progress and health', async () => {
+    const mockKr: KeyResult = {
+      id: 'kr-1',
+      workspace_id: 'ws-123',
+      objective_id: mockObjective1.id,
+      title: 'Acquire 500 active beta testers',
+      description: null,
+      metric_type: 'numeric',
+      baseline_value: 0,
+      current_value: 250,
+      target_value: 500,
+      unit: 'testers',
+      currency_code: null,
+      direction: 'increase',
+      confidence: 9,
+      start_date: '2026-10-01',
+      due_date: '2026-12-31',
+      archived_at: null,
+      created_at: '2026-10-01T00:00:00Z',
+      updated_at: '2026-10-01T00:00:00Z',
+    };
+
+    vi.mocked(objectivesApi.fetchObjectives).mockResolvedValue([mockObjective1]);
+    vi.mocked(keyResultsApi.fetchKeyResults).mockResolvedValue([mockKr]);
+
+    renderObjectivesList();
+
+    expect(await screen.findByText('Launch Self-Serve Onboarding Flow')).toBeInTheDocument();
+    expect(await screen.findByText('Acquire 500 active beta testers')).toBeInTheDocument();
+    expect(screen.getByText('Numeric ↑')).toBeInTheDocument();
+    expect(screen.getByText('Objective Aggregate Progress')).toBeInTheDocument();
   });
 
   it('renders empty state when no objectives exist', async () => {

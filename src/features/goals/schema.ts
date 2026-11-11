@@ -405,3 +405,207 @@ export const updateObjectiveSchema = z
   );
 
 export type UpdateObjectiveInput = z.infer<typeof updateObjectiveSchema>;
+
+// ==========================================
+// KEY RESULTS SCHEMAS
+// ==========================================
+
+export const METRIC_TYPES = ['numeric', 'binary'] as const;
+export type MetricType = (typeof METRIC_TYPES)[number];
+
+export const KR_DIRECTIONS = ['increase', 'decrease'] as const;
+export type KrDirection = (typeof KR_DIRECTIONS)[number];
+
+export const keyResultSchema = z.object({
+  id: z.string().uuid(),
+  workspace_id: z.string().uuid(),
+  objective_id: z.string().uuid(),
+  title: z
+    .string()
+    .trim()
+    .min(1, 'Key result title is required')
+    .max(120, 'Key result title must be 120 characters or less'),
+  description: z.string().nullable().default(''),
+  metric_type: z.enum(METRIC_TYPES).default('numeric'),
+  baseline_value: z.number(),
+  current_value: z.number(),
+  target_value: z.number(),
+  unit: z.string().default(''),
+  currency_code: z.string().length(3).nullable().optional(),
+  direction: z.enum(KR_DIRECTIONS).nullable().optional(),
+  confidence: z.number().int().min(1).max(10).nullable().optional(),
+  start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD'),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD'),
+  archived_at: z.string().nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export type KeyResult = z.infer<typeof keyResultSchema>;
+
+export const createKeyResultSchema = z
+  .object({
+    objective_id: z.string().uuid('Objective ID must be a valid UUID'),
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Key result title is required')
+      .max(120, 'Key result title must be 120 characters or less'),
+    description: z
+      .string()
+      .trim()
+      .max(1000, 'Description must be 1,000 characters or less')
+      .default(''),
+    metric_type: z.enum(METRIC_TYPES).default('numeric'),
+    baseline_value: z.number(),
+    current_value: z.number(),
+    target_value: z.number(),
+    unit: z.string().trim().max(30).default(''),
+    currency_code: z
+      .string()
+      .trim()
+      .length(3, 'Currency code must be 3 characters (e.g. USD)')
+      .toUpperCase()
+      .nullable()
+      .optional(),
+    direction: z.enum(KR_DIRECTIONS).nullable().optional(),
+    confidence: z
+      .number()
+      .int('Confidence must be an integer')
+      .min(1, 'Confidence must be between 1 and 10')
+      .max(10, 'Confidence must be between 1 and 10')
+      .nullable()
+      .optional(),
+    start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD'),
+    due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD'),
+  })
+  .refine((data) => data.due_date >= data.start_date, {
+    message: 'Due date must be on or after start date',
+    path: ['due_date'],
+  })
+  .refine(
+    (data) => {
+      if (data.metric_type === 'numeric') {
+        return data.target_value !== data.baseline_value;
+      }
+      return true;
+    },
+    {
+      message: 'Target value cannot equal baseline value for numeric key result',
+      path: ['target_value'],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.metric_type === 'numeric') {
+        return data.direction === 'increase' || data.direction === 'decrease';
+      }
+      return true;
+    },
+    {
+      message: 'Direction (increase or decrease) is required for numeric key results',
+      path: ['direction'],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.metric_type === 'numeric' && data.direction === 'increase') {
+        return data.target_value > data.baseline_value;
+      }
+      return true;
+    },
+    {
+      message: 'Target value must be greater than baseline value for increase key results',
+      path: ['target_value'],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.metric_type === 'numeric' && data.direction === 'decrease') {
+        return data.target_value < data.baseline_value;
+      }
+      return true;
+    },
+    {
+      message: 'Target value must be less than baseline value for decrease key results',
+      path: ['target_value'],
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.metric_type === 'binary') {
+        return (
+          data.baseline_value === 0 &&
+          data.target_value === 1 &&
+          (data.current_value === 0 || data.current_value === 1) &&
+          (data.direction === null || data.direction === undefined)
+        );
+      }
+      return true;
+    },
+    {
+      message:
+        'Binary key results require baseline=0, target=1, current in {0,1}, and no direction',
+      path: ['metric_type'],
+    },
+  );
+
+export type CreateKeyResultInput = z.infer<typeof createKeyResultSchema>;
+
+export const updateKeyResultSchema = z
+  .object({
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Key result title is required')
+      .max(120, 'Key result title must be 120 characters or less')
+      .optional(),
+    description: z
+      .string()
+      .trim()
+      .max(1000, 'Description must be 1,000 characters or less')
+      .optional(),
+    metric_type: z.enum(METRIC_TYPES).optional(),
+    baseline_value: z.number().optional(),
+    current_value: z.number().optional(),
+    target_value: z.number().optional(),
+    unit: z.string().trim().max(30).optional(),
+    currency_code: z
+      .string()
+      .trim()
+      .length(3, 'Currency code must be 3 characters')
+      .toUpperCase()
+      .nullable()
+      .optional(),
+    direction: z.enum(KR_DIRECTIONS).nullable().optional(),
+    confidence: z
+      .number()
+      .int('Confidence must be an integer')
+      .min(1, 'Confidence must be between 1 and 10')
+      .max(10, 'Confidence must be between 1 and 10')
+      .nullable()
+      .optional(),
+    start_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD')
+      .optional(),
+    due_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD')
+      .optional(),
+    archived_at: z.string().nullable().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.start_date && data.due_date) {
+        return data.due_date >= data.start_date;
+      }
+      return true;
+    },
+    {
+      message: 'Due date must be on or after start date',
+      path: ['due_date'],
+    },
+  );
+
+export type UpdateKeyResultInput = z.infer<typeof updateKeyResultSchema>;

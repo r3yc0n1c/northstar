@@ -174,6 +174,85 @@ export type Database = {
           },
         ];
       };
+      key_results: {
+        Row: {
+          archived_at: string | null;
+          baseline_value: number;
+          confidence: number | null;
+          created_at: string;
+          currency_code: string | null;
+          current_value: number;
+          description: string | null;
+          direction: string | null;
+          due_date: string;
+          id: string;
+          metric_type: string;
+          objective_id: string;
+          start_date: string;
+          target_value: number;
+          title: string;
+          unit: string;
+          updated_at: string;
+          workspace_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          archived_at?: string | null;
+          baseline_value: number;
+          confidence?: number | null;
+          created_at?: string;
+          currency_code?: string | null;
+          current_value: number;
+          description?: string | null;
+          direction?: string | null;
+          due_date: string;
+          id?: string;
+          metric_type: string;
+          objective_id: string;
+          start_date: string;
+          target_value: number;
+          title: string;
+          unit?: string;
+          updated_at?: string;
+          workspace_id: string;
+        };
+        Update: {
+          archived_at?: string | null;
+          baseline_value?: number;
+          confidence?: number | null;
+          created_at?: string;
+          currency_code?: string | null;
+          current_value?: number;
+          description?: string | null;
+          direction?: string | null;
+          due_date?: string;
+          id?: string;
+          metric_type?: string;
+          objective_id?: string;
+          start_date?: string;
+          target_value?: number;
+          title?: string;
+          unit?: string;
+          updated_at?: string;
+          workspace_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'fk_key_results_objective_workspace';
+            columns: ['workspace_id', 'objective_id'];
+            isOneToOne: false;
+            referencedRelation: 'objectives';
+            referencedColumns: ['workspace_id', 'id'];
+          },
+          {
+            foreignKeyName: 'key_results_workspace_id_fkey';
+            columns: ['workspace_id'];
+            isOneToOne: false;
+            referencedRelation: 'workspaces';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       objectives: {
         Row: {
           archived_at: string | null;
@@ -336,6 +415,16 @@ export type Database = {
     };
     Functions: {
       is_workspace_owner: { Args: { ws: string }; Returns: boolean };
+      kr_progress: {
+        Args: {
+          baseline: number;
+          current: number;
+          direction: string;
+          metric_type: string;
+          target: number;
+        };
+        Returns: number;
+      };
       validate_working_hours: { Args: { wh: Json }; Returns: boolean };
     };
     Enums: {
